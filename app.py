@@ -5,6 +5,18 @@ from datetime import date, timedelta
 import os
 import textwrap
 
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_REPO_NAME = os.getenv("GITHUB_REPO", "raj54669/meal-planner")
+GITHUB_BRANCH = "main"
+
+GITHUB_REPO = None
+if GITHUB_TOKEN:
+    try:
+        gh = Github(GITHUB_TOKEN)
+        GITHUB_REPO = gh.get_repo(GITHUB_REPO_NAME)   # ✅ real Repo object
+    except Exception as e:
+        st.warning(f"GitHub repo init failed: {e}")
+
 # ---------- File constants ----------
 MASTER_LIST_FILE = "master_list.csv"
 HISTORY_FILE = "history.csv"
