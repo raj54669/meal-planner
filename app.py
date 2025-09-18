@@ -49,12 +49,10 @@ if page == "Pick Today’s Recipe":
         if item_type != "-- Choose --":
             filtered = master_df[master_df["Item Type"] == item_type]
 
-            # Format Days Ago properly
             filtered["Days Ago"] = filtered["Days Ago"].apply(
                 lambda x: int(x) if isinstance(x, (int, float)) else x
             )
 
-            # Render table with custom column widths
             render_table(
                 filtered[["Recipe", "Item Type", "Last Eaten", "Days Ago"]],
                 col_widths={"Recipe": "200px", "Item Type": "120px", "Last Eaten": "120px", "Days Ago": "120px"},
@@ -87,4 +85,4 @@ elif page == "Master List":
 # ----------------- History -----------------
 elif page == "History":
     st.header("History of Picks")
-    render_table(history_df, col_widths={"Recipe": "200px", "Item Type": "150px", "Last Eaten": "120px"}, center_cols=[])
+    render_table(history_df, col_widths={"Recipe": "200px", "Item Type": "150px", "Last Eaten": "120px", "Days Ago": "120px"}, center_cols=["Days Ago"])
