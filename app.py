@@ -449,7 +449,9 @@ elif page == "Master List":
                     if ok:
                         st.success("Updated master list.")
                         st.session_state["edit_row"] = None
-                        master_df, master_sha = load_master_list()  # reload after edit
+                        # reload after edit
+                        master_df = load_master_list()
+                        master_sha = get_file_sha(MASTER_LIST_FILE)
                         safe_rerun()
                     else:
                         st.error("Failed to save master list. See logs.")
@@ -466,7 +468,9 @@ elif page == "Master List":
                     if ok:
                         st.success("Deleted entry.")
                         st.session_state["delete_row"] = None
-                        master_df, master_sha = load_master_list()  # reload after delete
+                        # reload after delete
+                        master_df = load_master_list()
+                        master_sha = get_file_sha(MASTER_LIST_FILE)
                         safe_rerun()
                     else:
                         st.error("Failed to delete entry. See logs.")
