@@ -14,17 +14,18 @@ try:
     from data_manager import (
         load_master_list,
         load_history,
-        save_master_list,   # ✅ REQUIRED for try_save_master
-        save_history,
-        get_file_sha
+        save_today_pick,
+        add_recipe_to_master,
+        delete_today_pick,
+        get_file_sha   # if you already added it
     )
 except Exception:
     load_master_list = None
     load_history = None
-    save_master_list = None   # ✅ fallback to avoid NameError
-    save_history = None
+    save_today_pick = None
+    add_recipe_to_master = None
+    delete_today_pick = None
     get_file_sha = None
-
 try:
     from recommendations import recommend
 except Exception:
