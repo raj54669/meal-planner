@@ -1,34 +1,56 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from data_manager import load_master_list, load_history, save_today_pick, save_master_list
-from recommendations import get_suggestions
-from ui_widgets import render_table
+from data_manager import (
+    load_master_list,
+    load_history,
+    save_today_pick,
+    add_recipe_to_master,
+    delete_today_pick,
+)
+from ui_widgets import display_table
 
 # ---------- GitHub Setup ----------
 try:
     from github import Github
 
     GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
-    REPO_NAME = st.secrets["GITHUB_REPO"]
+    REPO_NAME = st.secrets["GITHUB_REPO"]   # ✅ matches secrets.toml
     BRANCH_NAME = st.secrets.get("GITHUB_BRANCH", "main")
 
     g = Github(GITHUB_TOKEN)
     repo = g.get_repo(REPO_NAME)
     use_github = True
-except Exception as e:
+except Exception:
     st.warning("⚠️ GitHub not configured or secrets missing. Using local CSV files.")
     repo = None
     BRANCH_NAME = "main"
     use_github = False
 
-MASTER_CSV = st.secrets.get("MASTER_CSV", "master_list.csv")
-HISTORY_CSV = st.secrets.get("HISTORY_CSV", "history.csv")
+# ---------- CSS ----------
+st.markdown(
+    """
+    <style>
+    .block-container {
+        padding-top: 1rem; /* tighten top margin */
+    }
+    .dataframe th {
+        text-align: center !important;
+    }
+    .days-col {
+        text-align: center !important;
+        width: 60px !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-# ---------- App Title ----------
-st.markdown("<h1 style='margin-top: -30px;'>🍴 NextBite – Meal Planner App</h1>", unsafe_allow_html=True)
+# ---------- Load Data ----------
+master_df = load_master_list(repo, BRANCH_NAME, use_github)
+history_df = load_history(repo, BRANCH_NAME, use_github)
 
-# ---------- Sidebar Navigation ----------
+# ---------- Navigation ----------
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["Pick Today’s Recipe", "Master List", "History"])
 
@@ -36,68 +58,85 @@ page = st.sidebar.radio("Go to", ["Pick Today’s Recipe", "Master List", "Histo
 if page == "Pick Today’s Recipe":
     st.header("Pick Today’s Recipe")
 
-    history = load_history(repo, HISTORY_CSV)
-    master = load_master_list(repo, MASTER_CSV)
-
-    today = datetime.today().strftime("%Y-%m-%d")
-    if not history.empty and today in history["Date"].values:
-        today_pick = history.loc[history["Date"] == today, "Recipe"].values[0]
-        st.success(f"✅ Today's pick is **{today_pick}** (saved earlier).")
+    today = datetime.today().strftime("%d-%m-%Y")
+    if not history_df.empty and history_df["Date"].iloc[-1] == today:
+        st.success(f"✅ Today's pick is **{history_df['Recipe'].iloc[-1]}** (saved earlier).")
         st.write("If you want to change it, delete today's entry from the History tab then pick again.")
+
     else:
         option = st.radio("Choose option:", ["By Item Type", "Today's Suggestions"])
 
         if option == "By Item Type":
-            item_types = master["Item Type"].dropna().unique().tolist()
-            item_type = st.selectbox("Select Item Type:", ["-- Choose --"] + item_types)
+            item_types = master_df["Item Type"].dropna().unique().tolist()
+            choice = st.selectbox("Select Item Type:", ["-- Choose --"] + item_types)
 
-            if item_type != "-- Choose --":
-                filtered = master[master["Item Type"] == item_type].copy()
-                filtered = filtered.sort_values("Last Eaten", na_position="first")
-                render_table(filtered)
+            if choice != "-- Choose --":
+                filtered = master_df[master_df["Item Type"] == choice].copy()
+                filtered = filtered.merge(
+                    history_df.groupby("Recipe")["Date"].max().reset_index(),
+                    on="Recipe",
+                    how="left"
+                )
+                filtered.rename(columns={"Date": "Last Eaten"}, inplace=True)
+                filtered["Last Eaten"] = pd.to_datetime(filtered["Last Eaten"], errors="coerce").dt.strftime("%d-%m-%Y")
+                filtered["Days Ago"] = (
+                    pd.to_datetime(datetime.today().strftime("%d-%m-%Y"), format="%d-%m-%Y")
+                    - pd.to_datetime(filtered["Last Eaten"], format="%d-%m-%Y", errors="coerce")
+                ).dt.days.fillna("-").astype(str)
 
-                recipe = st.selectbox("Select Recipe:", ["-- Choose --"] + filtered["Recipe"].tolist())
-                if recipe != "-- Choose --":
-                    if st.button("Save Today's Pick"):
-                        save_today_pick(recipe, repo, HISTORY_CSV)
-                        st.success(f"✅ Saved today's pick: **{recipe}**")
+                display_table(filtered[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
 
-        else:  # Today's Suggestions
-            suggestions = get_suggestions(master, history)
-            render_table(suggestions)
+                pick = st.radio("Select recipe to save for today", filtered["Recipe"].tolist())
+                if st.button("Save Today’s Pick"):
+                    save_today_pick(pick, repo, BRANCH_NAME, use_github)
 
-            recipe = st.selectbox("Select Recipe:", ["-- Choose --"] + suggestions["Recipe"].tolist())
-            if recipe != "-- Choose --":
-                if st.button("Save Today's Pick"):
-                    save_today_pick(recipe, repo, HISTORY_CSV)
-                    st.success(f"✅ Saved today's pick: **{recipe}**")
+        elif option == "Today's Suggestions":
+            # Suggestions: sort by oldest eaten
+            suggestions = master_df.copy()
+            suggestions = suggestions.merge(
+                history_df.groupby("Recipe")["Date"].max().reset_index(),
+                on="Recipe",
+                how="left"
+            )
+            suggestions.rename(columns={"Date": "Last Eaten"}, inplace=True)
+            suggestions["Last Eaten"] = pd.to_datetime(suggestions["Last Eaten"], errors="coerce").dt.strftime("%d-%m-%Y")
+            suggestions["Days Ago"] = (
+                pd.to_datetime(datetime.today().strftime("%d-%m-%Y"), format="%d-%m-%Y")
+                - pd.to_datetime(suggestions["Last Eaten"], format="%d-%m-%Y", errors="coerce")
+            ).dt.days.fillna("-").astype(str)
+
+            suggestions = suggestions.sort_values(by="Days Ago", ascending=False)
+
+            display_table(suggestions[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
+
+            pick = st.radio("Select recipe to save for today", suggestions["Recipe"].tolist())
+            if st.button("Save Today’s Pick"):
+                save_today_pick(pick, repo, BRANCH_NAME, use_github)
 
 # ---------- Master List ----------
 elif page == "Master List":
-    st.header("Master List")
-    master = load_master_list(repo, MASTER_CSV)
-    render_table(master)
+    st.header("Master Meal List")
 
-    with st.expander("➕ Add New Recipe"):
-        new_recipe = st.text_input("Recipe Name")
-        new_type = st.text_input("Item Type")
+    display_table(master_df[["Recipe", "Item Type"]])
+
+    with st.expander("➕ Add a new recipe"):
+        recipe = st.text_input("Recipe name")
+        item_type = st.text_input("Item type")
         if st.button("Add Recipe"):
-            if new_recipe and new_type:
-                new_row = {"Recipe": new_recipe, "Item Type": new_type, "Last Eaten": ""}
-                master = pd.concat([master, pd.DataFrame([new_row])], ignore_index=True)
-                save_master_list(master, repo, MASTER_CSV)
-                st.success(f"✅ Added {new_recipe} to Master List")
+            if recipe and item_type:
+                add_recipe_to_master(recipe, item_type, repo, BRANCH_NAME, use_github)
+                st.success(f"✅ Added {recipe} to Master List")
             else:
-                st.error("Please enter both Recipe Name and Item Type.")
+                st.error("Please enter both Recipe name and Item type.")
 
 # ---------- History ----------
 elif page == "History":
-    st.header("History")
-    history = load_history(repo, HISTORY_CSV)
-    render_table(history)
+    st.header("Meal History")
 
-    if not history.empty:
-        if st.button("Delete Last Entry"):
-            history = history.iloc[:-1]
-            save_master_list(history, repo, HISTORY_CSV)  # reusing save_master_list for history
-            st.success("✅ Deleted last entry")
+    if history_df.empty:
+        st.info("No history yet.")
+    else:
+        display_table(history_df)
+
+        if st.button("❌ Delete Today’s Pick"):
+            delete_today_pick(repo, BRANCH_NAME, use_github)
