@@ -372,6 +372,7 @@ if page == "Pick Today’s Recipe":
 
 # -----------------------
 # MASTER LIST (restore Edit & Delete buttons)
+
 # -----------------------
 elif page == "Master List":
     st.header("Master List")
@@ -393,8 +394,8 @@ elif page == "Master List":
                 ok = try_save_master(new_master, master_sha)
                 if ok:
                     st.success(f"Added **{new_name}** to master list.")
-                    # 🔥 Reload immediately so changes reflect without reboot
-                    master_df = load_master_list()
+                    # 🔥 Reload both DataFrame and SHA
+                    master_df, master_sha = load_master_list()
                     safe_rerun()
                 else:
                     st.error("Failed to save master list. Check logs.")
@@ -447,7 +448,7 @@ elif page == "Master List":
                     if ok:
                         st.success("Updated master list.")
                         st.session_state["edit_row"] = None
-                        master_df = load_master_list()  # reload after edit
+                        master_df, master_sha = load_master_list()  # reload after edit
                         safe_rerun()
                     else:
                         st.error("Failed to save master list. See logs.")
@@ -464,7 +465,7 @@ elif page == "Master List":
                     if ok:
                         st.success("Deleted entry.")
                         st.session_state["delete_row"] = None
-                        master_df = load_master_list()  # reload after delete
+                        master_df, master_sha = load_master_list()  # reload after delete
                         safe_rerun()
                     else:
                         st.error("Failed to delete entry. See logs.")
@@ -472,6 +473,8 @@ elif page == "Master List":
                     st.session_state["delete_row"] = None
                     safe_rerun()
 # -----------------------
+
+
 # HISTORY (Item Type shown; sorted oldest → newest)
 # -----------------------
 elif page == "History":
