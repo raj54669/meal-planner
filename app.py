@@ -9,7 +9,7 @@ import textwrap
 try:
     from data_manager import load_master_list, load_history, save_master_list, save_history
 except Exception:
-    load_master_list = None
+    #load_master_list = None
     load_history = None
     save_master_list = None
     save_history = None
@@ -395,8 +395,10 @@ elif page == "Master List":
                 if ok:
                     st.success(f"Added **{new_name}** to master list.")
                     # 🔥 Reload both DataFrame and SHA
-                    master_df = load_master_list()
-                    master_sha = get_file_sha(MASTER_LIST_FILE)
+                    if load_master_list:   # ✅ Safe check
+                        master_df = load_master_list()
+                    if get_file_sha:       # ✅ Safe check
+                        master_sha = get_file_sha(MASTER_LIST_FILE)
                     safe_rerun()
                 else:
                     st.error("Failed to save master list. Check logs.")
@@ -450,8 +452,10 @@ elif page == "Master List":
                         st.success("Updated master list.")
                         st.session_state["edit_row"] = None
                         # reload after edit
-                        master_df = load_master_list()
-                        master_sha = get_file_sha(MASTER_LIST_FILE)
+                        if load_master_list:   # ✅ Safe check
+                            master_df = load_master_list()
+                        if get_file_sha:       # ✅ Safe check
+                            master_sha = get_file_sha(MASTER_LIST_FILE)
                         safe_rerun()
                     else:
                         st.error("Failed to save master list. See logs.")
@@ -469,8 +473,10 @@ elif page == "Master List":
                         st.success("Deleted entry.")
                         st.session_state["delete_row"] = None
                         # reload after delete
-                        master_df = load_master_list()
-                        master_sha = get_file_sha(MASTER_LIST_FILE)
+                        if load_master_list:   # ✅ Safe check
+                            master_df = load_master_list()
+                        if get_file_sha:       # ✅ Safe check
+                            master_sha = get_file_sha(MASTER_LIST_FILE)
                         safe_rerun()
                     else:
                         st.error("Failed to delete entry. See logs.")
