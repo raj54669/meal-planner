@@ -1,68 +1,98 @@
-# -----------------------------
-# FILE: recommendations.py
-# -----------------------------
+# recommendations.py
 import pandas as pd
 import random
 from datetime import date
 
-
-def recommend(master_df, history_df, min_count=5, max_count=7):
-    # Return a DataFrame with columns: Recipe, Item Type, Last Eaten (datetime or NaT), Days Ago
+def recommend(master_df: pd.DataFrame, history_df: pd.DataFrame, min_count: int = 5, max_count: int = 7) -> pd.DataFrame:
+    """
+    Simple recommendation engine:
+    - excludes recipes eaten in last 7 days
+    - tries to avoid repeating same Item Type as last day (if known)
+    - sorts by days-ago (descending) and breaks ties randomly
+    - returns between min_count and max_count rows (if available)
+    """
     if master_df is None or master_df.empty:
         return pd.DataFrame()
 
     # compute last eaten per recipe
-    last_eaten = {}
-    if history_df is not None and not history_df.empty:
+    last_dates = {}
+    if history_df is not None and not history_df.empty and "Date" in history_df.columns:
         hist = history_df.dropna(subset=["Date"]).sort_values("Date", ascending=False)
-        last_eaten = hist.groupby("Recipe")["Date"].first().to_dict()
+        last_dates = hist.groupby("Recipe")["Date"].first().to_dict()
 
+    # build candidate df
     candidates = master_df.copy()
-    candidates["Last Eaten"] = candidates["Recipe"].map(lambda r: last_eaten.get(r))
-    candidates["Days Ago"] = candidates["Last Eaten"].apply(lambda d: (date.today() - pd.to_datetime(d).date()).days if pd.notna(d) else None)
+    candidates["Last Eaten"] = candidates["Recipe"].map(lambda r: last_dates.get(r))
+    today = date.today()
+    def compute_days(d):
+        try:
+            if pd.isna(d):
+                return None
+            dt = pd.to_datetime(d).date()
+            return (today - dt).days
+        except Exception:
+            return None
+    candidates["Days Ago"] = candidates["Last Eaten"].apply(compute_days)
 
-    # filter out recipes eaten within last 7 days
-    filtered = candidates[candidates["Days Ago"].isna() | (candidates["Days Ago"] >= 7)].copy()
+    # filter out eaten in last 7 days
+    candidates = candidates[~candidates["Days Ago"].apply(lambda x: x is not None and x < 7)]
 
-    if filtered.empty:
-        # relax rule: allow ones older than 0 days
-        filtered = candidates.copy()
+    # avoid same item type as last saved day if possible
+    last_item_type = None
+    if history_df is not None and not history_df.empty and "Item Type" in history_df.columns:
+        hist = history_df.dropna(subset=["Date"]).sort_values("Date", ascending=False)
+        if not hist.empty:
+            last_item_type = hist.iloc[0].get("Item Type")
 
-    # sort by Days Ago desc (not eaten longest first). For NaN (never eaten) treat as large number
-    def key_func(row):
-        if pd.isna(row["Days Ago"]):
-            return 10**6
-        return int(row["Days Ago"])
+    # scoring: larger Days Ago => higher priority; None treated as -1 to push down (or up? treat None as very large to give priority)
+    def score_row(r):
+        da = r["Days Ago"]
+        if da is None:
+            # never eaten: give a high score
+            return 9999 + random.random()
+        return float(da) + random.random() * 0.01
 
-    shuffled = filtered.sample(frac=1, random_state=42)  # deterministic shuffle for tie-breaks
-    sorted_cands = shuffled.sort_values("Days Ago", ascending=False, key=lambda col: col.fillna(10**6))
+    candidates["score"] = candidates.apply(score_row, axis=1)
 
-    # build recommendations avoiding same item type consecutively
-    recs = []
-    last_type = None
-    for _, r in sorted_cands.iterrows():
-        if len(recs) >= max_count:
+    # sort by score desc
+    candidates = candidates.sort_values("score", ascending=False).reset_index(drop=True)
+
+    # try to pick a set that respects the no same-item-type-consecutive rule
+    # simple greedy: pick top until reach max_count, but skip a recipe if it would make two consecutive same item types with previous picked
+    picks = []
+    picked_types = []
+    for _, row in candidates.iterrows():
+        if len(picks) >= max_count:
             break
-        if last_type is None or r["Item Type"] != last_type:
-            recs.append(r)
-            last_type = r["Item Type"]
-
-    # If not enough, fill remaining without type rule
-    if len(recs) < min_count:
-        # fill from sorted list ignoring last_type
-        for _, r in sorted_cands.iterrows():
-            if r["Recipe"] in [x["Recipe"] for x in recs]:
+        itype = row.get("Item Type")
+        # if first pick, avoid last_item_type if possible
+        if last_item_type and len(picks) == 0 and itype == last_item_type:
+            # skip if there exists other candidate not equal
+            others = candidates[candidates["Item Type"] != last_item_type]
+            if not others.empty:
                 continue
-            recs.append(r)
-            if len(recs) >= min_count:
+        # avoid consecutive within picks
+        if picked_types and itype == picked_types[-1]:
+            # try skipping if others exist
+            continue
+        picks.append(row)
+        picked_types.append(itype)
+
+    # if fewer than min_count, fill with top candidates ignoring item-type constraints
+    if len(picks) < min_count:
+        extra_needed = min_count - len(picks)
+        for _, row in candidates.iterrows():
+            if row in picks:
+                continue
+            picks.append(row)
+            if len(picks) >= min_count:
                 break
 
-    if not recs:
+    if not picks:
         return pd.DataFrame()
 
-    out = pd.DataFrame(recs)
-    # compute Days Ago numeric
-    out["Days Ago"] = out["Days Ago"].apply(lambda x: int(x) if pd.notna(x) else pd.NA)
-    return out.reset_index(drop=True)
-
-
+    rec_df = pd.DataFrame(picks)
+    # drop helper score col
+    if "score" in rec_df.columns:
+        rec_df = rec_df.drop(columns=["score"])
+    return rec_df.reset_index(drop=True)
