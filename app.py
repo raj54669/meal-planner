@@ -393,31 +393,33 @@ elif page == "Master List":
                 ok = try_save_master(new_master, master_sha)
                 if ok:
                     st.success(f"Added **{new_name}** to master list.")
+                    # 🔥 Reload immediately so changes reflect without reboot
+                    master_df = load_master_list()
                     safe_rerun()
                 else:
                     st.error("Failed to save master list. Check logs.")
 
-    st.markdown("---")  # separator
+    st.markdown("")  # spacing
 
     if master_df.empty:
         st.info("No recipes found. Add some above.")
     else:
-        # Initialize session keys
+        # Initialize session keys for editing/deleting
         if "edit_row" not in st.session_state:
             st.session_state["edit_row"] = None
         if "delete_row" not in st.session_state:
             st.session_state["delete_row"] = None
 
         # Header row
-        cols = st.columns([4, 2, 2, 2])
+        cols = st.columns([4, 2, 1, 1])
         cols[0].markdown("**Recipe**")
         cols[1].markdown("**Item Type**")
         cols[2].markdown("**Edit**")
         cols[3].markdown("**Delete**")
 
-        # Rows
+        # Row controls: Edit / Delete (inline)
         for i, row in master_df.reset_index(drop=True).iterrows():
-            cols = st.columns([4, 2, 2, 2])
+            cols = st.columns([4, 2, 1, 1])
             cols[0].write(row["Recipe"])
             cols[1].write(row["Item Type"])
 
@@ -433,42 +435,42 @@ elif page == "Master List":
                 st.session_state["edit_row"] = None
                 safe_rerun()
 
-            # Inline editor
+            # If this row is selected for edit, show inline editor
             if st.session_state.get("edit_row") == i:
-                edit_name = st.text_input("Edit Recipe", value=row["Recipe"], key=f"edit_name_{i}")
-                edit_type = st.text_input("Edit Item Type", value=row["Item Type"], key=f"edit_type_{i}")
-                save_col, cancel_col = st.columns([1,1])
-                if save_col.button("Save", key=f"save_edit_{i}"):
+                st.markdown("---")
+                edit_name = st.text_input(f"Edit name ({i}):", value=row["Recipe"], key=f"edit_name_{i}")
+                edit_type = st.text_input(f"Edit type ({i}):", value=row["Item Type"], key=f"edit_type_{i}")
+                if st.button("Save Edit", key=f"save_edit_{i}"):
                     master_df.at[i, "Recipe"] = edit_name
                     master_df.at[i, "Item Type"] = edit_type
                     ok = try_save_master(master_df, master_sha)
                     if ok:
                         st.success("Updated master list.")
                         st.session_state["edit_row"] = None
+                        master_df = load_master_list()  # reload after edit
                         safe_rerun()
                     else:
-                        st.error("Failed to save master list.")
-                if cancel_col.button("Cancel", key=f"cancel_edit_{i}"):
+                        st.error("Failed to save master list. See logs.")
+                if st.button("Cancel", key=f"cancel_edit_{i}"):
                     st.session_state["edit_row"] = None
                     safe_rerun()
 
-            # Delete confirm
+            # If deletion was requested for this row, ask confirm
             if st.session_state.get("delete_row") == i:
                 st.warning(f"Confirm delete '{row['Recipe']}'?")
-                yes_col, no_col = st.columns([1,1])
-                if yes_col.button("Yes Delete", key=f"confirm_del_{i}"):
+                if st.button("Confirm Delete", key=f"confirm_del_{i}"):
                     new_master = master_df.drop(i).reset_index(drop=True)
                     ok = try_save_master(new_master, master_sha)
                     if ok:
                         st.success("Deleted entry.")
                         st.session_state["delete_row"] = None
+                        master_df = load_master_list()  # reload after delete
                         safe_rerun()
                     else:
-                        st.error("Failed to delete entry.")
-                if no_col.button("Cancel", key=f"cancel_del_{i}"):
+                        st.error("Failed to delete entry. See logs.")
+                if st.button("Cancel Delete", key=f"cancel_del_{i}"):
                     st.session_state["delete_row"] = None
                     safe_rerun()
-
 # -----------------------
 # HISTORY (Item Type shown; sorted oldest → newest)
 # -----------------------
