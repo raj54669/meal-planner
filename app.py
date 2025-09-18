@@ -224,18 +224,20 @@ def try_save_master(df, sha=None):
     """
     if add_recipe_to_master and GITHUB_REPO and GITHUB_TOKEN:
         try:
+            # call data_manager.add_recipe_to_master with same signature
             r = add_recipe_to_master(df, sha)
             if isinstance(r, tuple):
                 return bool(r[0])
             return bool(r)
         except TypeError:
+            try:
+                return bool(add_recipe_to_master(df))
+            except Exception:
+                return False
+        except Exception:
             return False
-    else:
-        # fallback: save locally
-        df.to_csv("master_list.csv", index=False)
-        return True
 
-    # fallback to local
+    # fallback: save locally
     try:
         df.to_csv(MASTER_CSV, index=False)
         return True
