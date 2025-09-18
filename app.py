@@ -384,6 +384,10 @@ if page == "Pick Today’s Recipe":
 elif page == "Master List":
     st.header("Master List")
     st.write("Add / Edit / Delete recipes. Edit opens inline editor for the selected row.")
+  
+    # Always reload latest master list to reflect changes
+    master_df = load_master_list()
+    master_sha = get_file_sha(MASTER_LIST_FILE)
 
     # Add recipe form
     with st.form("add_recipe", clear_on_submit=True):
