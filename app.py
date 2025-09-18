@@ -218,25 +218,22 @@ def load_data():
     return master_df, history_df, master_sha, history_sha
 
 
-def try_save_master(df: pd.DataFrame, master_sha=None):
+def try_save_master(df, sha=None):
     """
-    Attempt to save master list via save_master_list helper (if available.)
-    If not, fallback to local CSV. Return True on success.
+    Try saving the master list (GitHub if available, else fallback to CSV).
     """
-    if save_master_list and GITHUB_REPO and GITHUB_TOKEN:
+    if add_recipe_to_master and GITHUB_REPO and GITHUB_TOKEN:
         try:
-            r = save_master_list(df, GITHUB_REPO, GITHUB_TOKEN, branch=GITHUB_BRANCH, sha=master_sha)
+            r = add_recipe_to_master(df, sha)
             if isinstance(r, tuple):
                 return bool(r[0])
             return bool(r)
         except TypeError:
-            # try simpler signature
-            try:
-                return bool(save_master_list(df, GITHUB_REPO, GITHUB_TOKEN))
-            except Exception:
-                pass
-        except Exception:
-            pass
+            return False
+    else:
+        # fallback: save locally
+        df.to_csv("master_list.csv", index=False)
+        return True
 
     # fallback to local
     try:
