@@ -395,7 +395,8 @@ elif page == "Master List":
                 if ok:
                     st.success(f"Added **{new_name}** to master list.")
                     # 🔥 Reload both DataFrame and SHA
-                    master_df, master_sha = load_master_list()
+                    master_df = load_master_list()
+                    master_sha = get_file_sha(MASTER_LIST_FILE)
                     safe_rerun()
                 else:
                     st.error("Failed to save master list. Check logs.")
