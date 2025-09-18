@@ -17,17 +17,16 @@ GITHUB_BRANCH = st.secrets.get("GITHUB_BRANCH") if "GITHUB_BRANCH" in st.secrets
 
 st.set_page_config(page_title="NextBite – Meal Planner App", page_icon="🍴", layout="centered")
 
-# Apply compact CSS (reduces top whitespace and adjusts table styling)
+# Apply compact CSS
 apply_compact_css()
 
 st.title("🍴 NextBite – Meal Planner App")
 
-# Helper safe rerun (some Streamlit builds may not expose experimental_rerun)
+# Helper safe rerun
 def safe_rerun():
     try:
         st.experimental_rerun()
     except Exception:
-        # if not available, do nothing; user can refresh
         pass
 
 # Load data
@@ -56,11 +55,11 @@ for c in ["Date", "Recipe", "Item Type"]:
 if "Date" in history_df.columns:
     history_df["Date"] = pd.to_datetime(history_df["Date"], errors="coerce")
 
-# Sidebar navigation (keep core workflow)
+# Sidebar
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["Pick Today’s Recipe", "Master List", "History"]) 
 
-# utility: today's pick
+# today's pick
 today = date.today()
 today_entries = history_df.dropna(subset=["Date"]).copy()
 if not today_entries.empty:
@@ -100,8 +99,13 @@ if page == "Pick Today’s Recipe":
                 filtered["Last Eaten"] = filtered["Recipe"].map(lambda r: last_dates.get(r))
                 filtered["Days Ago"] = filtered["Last Eaten"].apply(lambda d: (today - pd.to_datetime(d).date()).days if pd.notna(d) else pd.NA)
 
-                # show selectable table and radio selection
-                selected = render_selectable_table(filtered, select_key="by_type_select", show_cols=["Recipe", "Last Eaten", "Days Ago"], radio_label="Select recipe to save for today")
+                # ✅ show Item Type column too
+                selected = render_selectable_table(
+                    filtered,
+                    select_key="by_type_select",
+                    show_cols=["Recipe", "Item Type", "Last Eaten", "Days Ago"],
+                    radio_label="Select recipe to save for today"
+                )
 
                 if selected and st.button("Save Today's Pick (By Type)"):
                     new_row = {"Date": today.strftime("%Y-%m-%d"), "Recipe": selected, "Item Type": selected_type}
@@ -112,7 +116,6 @@ if page == "Pick Today’s Recipe":
                             st.success(f"Saved **{selected}** to history (GitHub).")
                             safe_rerun()
                         else:
-                            # fallback
                             new_history.to_csv("history.csv", index=False)
                             st.success(f"Saved **{selected}** to local history.csv (no GitHub configured).")
                             safe_rerun()
@@ -125,13 +128,16 @@ if page == "Pick Today’s Recipe":
         if rec_df is None or rec_df.empty:
             st.warning("No suggestions available. Add more recipes or relax rules.")
         else:
-            # format Last Eaten and Days Ago types
             if "Last Eaten" in rec_df.columns:
                 rec_df["Last Eaten"] = pd.to_datetime(rec_df["Last Eaten"], errors="coerce")
             rec_df["Days Ago"] = rec_df["Days Ago"].apply(lambda x: int(x) if pd.notna(x) else pd.NA)
 
-            # show with Item Type next to Recipe
-            selected = render_selectable_table(rec_df, select_key="suggest_select", show_cols=["Recipe", "Item Type", "Last Eaten", "Days Ago"], radio_label="Select recipe to save for today")
+            selected = render_selectable_table(
+                rec_df,
+                select_key="suggest_select",
+                show_cols=["Recipe", "Item Type", "Last Eaten", "Days Ago"],
+                radio_label="Select recipe to save for today"
+            )
             if selected and st.button("Save Today's Pick (Suggestion)"):
                 chosen = rec_df[rec_df["Recipe"] == selected].iloc[0]
                 new_row = {"Date": today.strftime("%Y-%m-%d"), "Recipe": selected, "Item Type": chosen["Item Type"]}
@@ -178,13 +184,11 @@ elif page == "Master List":
     if master_df.empty:
         st.info("No recipes found. Add some above.")
     else:
-        # render rows with Edit/Delete buttons
         for idx, row in master_df.reset_index(drop=True).iterrows():
             cols = st.columns([4, 2, 1])
             cols[0].write(row["Recipe"])
             cols[1].write(row["Item Type"])
             if cols[2].button("✏️ Edit", key=f"edit_{idx}"):
-                # inline edit (simple)
                 new_name = st.text_input("Edit name:", value=row["Recipe"], key=f"edit_name_{idx}")
                 new_type = st.text_input("Edit type:", value=row["Item Type"], key=f"edit_type_{idx}")
                 if st.button("Save Edit", key=f"save_edit_{idx}"):
@@ -202,19 +206,18 @@ elif page == "Master List":
                     except Exception as e:
                         st.error(f"Failed to save master list: {e}")
             if cols[2].button("🗑️ Delete", key=f"del_{idx}"):
-                if st.confirm(f"Delete '{row['Recipe']}'? This action cannot be undone."):
-                    new_master = master_df.drop(idx).reset_index(drop=True)
-                    try:
-                        ok, new_master_sha = save_master_list(new_master, GITHUB_REPO, GITHUB_TOKEN, branch=GITHUB_BRANCH, sha=master_sha)
-                        if ok:
-                            st.success("Deleted from GitHub master list.")
-                            safe_rerun()
-                        else:
-                            new_master.to_csv("master_list.csv", index=False)
-                            st.success("Deleted from local master_list.csv.")
-                            safe_rerun()
-                    except Exception as e:
-                        st.error(f"Failed to delete: {e}")
+                new_master = master_df.drop(idx).reset_index(drop=True)
+                try:
+                    ok, new_master_sha = save_master_list(new_master, GITHUB_REPO, GITHUB_TOKEN, branch=GITHUB_BRANCH, sha=master_sha)
+                    if ok:
+                        st.success("Deleted from GitHub master list.")
+                        safe_rerun()
+                    else:
+                        new_master.to_csv("master_list.csv", index=False)
+                        st.success("Deleted from local master_list.csv.")
+                        safe_rerun()
+                except Exception as e:
+                    st.error(f"Failed to delete: {e}")
 
 # ----------------- HISTORY -----------------
 elif page == "History":
@@ -257,7 +260,6 @@ elif page == "History":
             filtered_df = filtered_df.copy()
             filtered_df["Days Ago"] = filtered_df["Date"].apply(lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA)
             display_cols = ["Date", "Recipe", "Item Type", "Days Ago"]
-            # format Date column to DD-MM-YYYY
             df_display = filtered_df[display_cols].copy()
             df_display["Date"] = pd.to_datetime(df_display["Date"]).dt.strftime("%d-%m-%Y")
             st.dataframe(df_display.sort_values("Date", ascending=False).reset_index(drop=True), use_container_width=True)
