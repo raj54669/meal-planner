@@ -381,13 +381,20 @@ if page == "Pick Today’s Recipe":
 # MASTER LIST (restore Edit & Delete buttons)
 
 # -----------------------
+
+# -----------------------
 elif page == "Master List":
     st.header("Master List")
     st.write("Add / Edit / Delete recipes. Edit opens inline editor for the selected row.")
 
     # Always reload latest master list to reflect changes
-    master_df = load_master_list()
-    master_sha = get_file_sha(MASTER_LIST_FILE)
+    if callable(load_master_list):
+        master_df = load_master_list()
+        master_sha = get_file_sha(MASTER_LIST_FILE)
+    else:
+        st.error("⚠️ load_master_list not available. Check data_manager.py import.")
+        master_df = pd.DataFrame(columns=["Recipe", "Item Type"])
+        master_sha = None
 
     # Add recipe form
     with st.form("add_recipe", clear_on_submit=True):
@@ -406,9 +413,9 @@ elif page == "Master List":
                 if ok:
                     st.success(f"Added **{new_name}** to master list.")
                     # 🔥 Reload both DataFrame and SHA
-                    if load_master_list:   # ✅ Safe check
+                    if callable(load_master_list):
                         master_df = load_master_list()
-                    if get_file_sha:       # ✅ Safe check
+                    if callable(get_file_sha):
                         master_sha = get_file_sha(MASTER_LIST_FILE)
                     safe_rerun()
                 else:
@@ -462,10 +469,9 @@ elif page == "Master List":
                     if ok:
                         st.success("Updated master list.")
                         st.session_state["edit_row"] = None
-                        # reload after edit
-                        if load_master_list:   # ✅ Safe check
+                        if callable(load_master_list):
                             master_df = load_master_list()
-                        if get_file_sha:       # ✅ Safe check
+                        if callable(get_file_sha):
                             master_sha = get_file_sha(MASTER_LIST_FILE)
                         safe_rerun()
                     else:
@@ -483,10 +489,9 @@ elif page == "Master List":
                     if ok:
                         st.success("Deleted entry.")
                         st.session_state["delete_row"] = None
-                        # reload after delete
-                        if load_master_list:   # ✅ Safe check
+                        if callable(load_master_list):
                             master_df = load_master_list()
-                        if get_file_sha:       # ✅ Safe check
+                        if callable(get_file_sha):
                             master_sha = get_file_sha(MASTER_LIST_FILE)
                         safe_rerun()
                     else:
