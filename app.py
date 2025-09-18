@@ -1,78 +1,64 @@
 import streamlit as st
 import pandas as pd
-import datetime
-import io
-from github import Github
+from data_manager import load_master_list, save_master_list, load_history, save_history
+from ui_widgets import display_filtered_table, display_today_suggestions
+from datetime import datetime
 
-# ---------- GitHub Setup ----------
-GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
-REPO_NAME = st.secrets["GITHUB_REPO"]     # updated here
-BRANCH = st.secrets["GITHUB_BRANCH"]      # updated here
+# CSS to reduce top margin and style tables
+st.markdown("""
+    <style>
+    .block-container {
+        padding-top: 1rem;
+    }
+    table.dataframe th:first-child, table.dataframe td:first-child {
+        display: none;
+    }
+    td, th {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-g = Github(GITHUB_TOKEN)
-repo = g.get_repo(REPO_NAME)
+st.set_page_config(page_title="Meal Planner", layout="wide")
 
-# ---------- File Config ----------
-MASTER_FILE = "master_meals.csv"
-HISTORY_FILE = "meal_history.csv"
-
-# ---------- Helper Functions ----------
-def load_csv_from_repo(filename):
-    try:
-        file_content = repo.get_contents(filename, ref=BRANCH)
-        return pd.read_csv(io.StringIO(file_content.decoded_content.decode()))
-    except Exception:
-        return pd.DataFrame()
-
-def save_csv_to_repo(df, filename, message):
-    csv_buffer = io.StringIO()
-    df.to_csv(csv_buffer, index=False)
-    content = csv_buffer.getvalue()
-
-    try:
-        existing_file = repo.get_contents(filename, ref=BRANCH)
-        repo.update_file(existing_file.path, message, content, existing_file.sha, branch=BRANCH)
-    except Exception:
-        repo.create_file(filename, message, content, branch=BRANCH)
-
-# ---------- Load Data ----------
-master_df = load_csv_from_repo(MASTER_FILE)
-history_df = load_csv_from_repo(HISTORY_FILE)
-
-# ---------- Streamlit UI ----------
 st.title("🥗 Meal Planner with GitHub Storage")
 
-# Show master meals
-if not master_df.empty:
-    st.subheader("Master Meal List")
-    st.dataframe(master_df)
-else:
-    st.warning("No master meal list found!")
+# Load data
+master_df = load_master_list()
+history_df = load_history()
 
-# Add new meal
-with st.form("add_meal_form"):
-    meal_name = st.text_input("Meal Name")
-    calories = st.number_input("Calories", min_value=50, max_value=2000, step=50)
-    submit = st.form_submit_button("Add Meal")
+# Section 1: Add Recipe to Master List
+st.subheader("📘 Add Recipe to Master List")
+with st.form("add_recipe_form"):
+    name = st.text_input("Recipe Name")
+    item_type = st.selectbox("Item Type", ["Breakfast", "Lunch", "Dinner", "Snack"])
+    calories = st.number_input("Calories", min_value=0, step=10)
+    submitted = st.form_submit_button("Add Recipe")
+    if submitted and name:
+        new_row = {"Recipe": name, "Item Type": item_type, "Calories": calories}
+        master_df = pd.concat([master_df, pd.DataFrame([new_row])], ignore_index=True)  # ✅ Fix append
+        save_master_list(master_df)
+        st.success(f"✅ {name} added to Master List")
 
-    if submit and meal_name:
-        new_row = pd.DataFrame([[meal_name, calories]], columns=["Meal", "Calories"])
-        master_df = pd.concat([master_df, new_row], ignore_index=True)
-        save_csv_to_repo(master_df, MASTER_FILE, f"Added meal: {meal_name}")
-        st.success(f"✅ {meal_name} added!")
+# Section 2: Filter Recipes by Item Type
+st.subheader("🔎 Filter Recipes by Item Type")
+item_filter = st.selectbox("Select Item Type", ["All"] + master_df["Item Type"].unique().tolist())
+filtered_df = master_df if item_filter == "All" else master_df[master_df["Item Type"] == item_filter]
+display_filtered_table(filtered_df, history_df)
 
-# Log today's meal
-st.subheader("Log Today's Meal")
-if not master_df.empty:
-    meal_choice = st.selectbox("Select a meal", master_df["Meal"].tolist())
-    if st.button("Log Meal"):
-        today = datetime.date.today()
-        new_entry = pd.DataFrame([[today, meal_choice]], columns=["Date", "Meal"])
-        history_df = pd.concat([history_df, new_entry], ignore_index=True)
-        save_csv_to_repo(history_df, HISTORY_FILE, f"Logged meal: {meal_choice} on {today}")
-        st.success(f"✅ Logged {meal_choice} for {today}")
+# Section 3: Today’s Suggestions
+st.subheader("✨ Today’s Suggestions")
+suggestions = master_df.sample(min(5, len(master_df))) if not master_df.empty else pd.DataFrame()
+display_today_suggestions(suggestions, history_df)
 
-# Show meal history
-if not history_df.empty:
-    st.subheader("Meal History")
-    st.dataframe(history_df)
+# Section 4: Save Today’s Pick
+st.subheader("📝 Log Today’s Meal")
+with st.form("log_meal_form"):
+    recipe_choice = st.selectbox("Pick Recipe", master_df["Recipe"].tolist() if not master_df.empty else [])
+    log_btn = st.form_submit_button("Save Today’s Pick")
+    if log_btn and recipe_choice:
+        new_row = {"Recipe": recipe_choice, "Date": datetime.today().strftime("%d-%m-%Y")}
+        history_df = pd.concat([history_df, pd.DataFrame([new_row])], ignore_index=True)  # ✅ Fix append
+        save_history(history_df)
+        st.success(f"✅ Logged {recipe_choice} for today")
