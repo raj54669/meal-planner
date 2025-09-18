@@ -1,6 +1,8 @@
 import pandas as pd
 from datetime import datetime
 from io import StringIO
+import hashlib
+import os
 
 # ---------- Load Master ----------
 def load_master_list(repo=None, branch="main", use_github=False):
@@ -73,4 +75,3 @@ def get_file_sha(filepath: str) -> str:
         while chunk := f.read(8192):
             sha1.update(chunk)
     return sha1.hexdigest()
-
