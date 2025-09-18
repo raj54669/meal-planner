@@ -1,93 +1,64 @@
-# data_manager.py
-import base64
-import requests
 import pandas as pd
-import io
-import os
-from typing import Tuple
+from datetime import datetime
+from io import StringIO
 
-# Filenames when using local fallback
-MASTER_FN = "master_list.csv"
-HISTORY_FN = "history.csv"
+# ---------- Load Master ----------
+def load_master_list(repo=None, branch="main", use_github=False):
+    try:
+        if use_github:
+            file = repo.get_contents("master_list.csv", ref=branch)
+            return pd.read_csv(StringIO(file.decoded_content.decode()))
+        else:
+            return pd.read_csv("master_list.csv")
+    except Exception:
+        return pd.DataFrame(columns=["Recipe", "Item Type"])
 
-# ---------- GitHub helpers ----------
-def _gh_get_file(repo: str, path: str, token: str, branch: str = "main"):
-    """
-    Returns (content_bytes, sha) or raises Exception on failure.
-    """
-    api = f"https://api.github.com/repos/{repo}/contents/{path}?ref={branch}"
-    headers = {"Authorization": f"token {token}"}
-    r = requests.get(api, headers=headers, timeout=15)
-    if r.status_code in (200,):
-        j = r.json()
-        content = base64.b64decode(j["content"])
-        return content, j["sha"]
+# ---------- Load History ----------
+def load_history(repo=None, branch="main", use_github=False):
+    try:
+        if use_github:
+            file = repo.get_contents("history.csv", ref=branch)
+            return pd.read_csv(StringIO(file.decoded_content.decode()))
+        else:
+            return pd.read_csv("history.csv")
+    except Exception:
+        return pd.DataFrame(columns=["Date", "Recipe"])
+
+# ---------- Save Today’s Pick ----------
+def save_today_pick(recipe, repo=None, branch="main", use_github=False):
+    today = datetime.today().strftime("%d-%m-%Y")
+    new_row = pd.DataFrame([{"Date": today, "Recipe": recipe}])
+
+    history = load_history(repo, branch, use_github)
+    updated = pd.concat([history, new_row], ignore_index=True)
+
+    if use_github:
+        file = repo.get_contents("history.csv", ref=branch)
+        repo.update_file(file.path, f"Update history {today}", updated.to_csv(index=False), file.sha, branch=branch)
     else:
-        raise Exception(f"GitHub GET failed: {r.status_code} {r.text}")
+        updated.to_csv("history.csv", index=False)
 
-def _gh_put_file(repo: str, path: str, token: str, content_bytes: bytes, message: str, branch: str="main", sha: str=None):
-    """
-    Create or update file. Returns (ok_bool, new_sha_str)
-    """
-    api = f"https://api.github.com/repos/{repo}/contents/{path}"
-    headers = {"Authorization": f"token {token}"}
-    content_b64 = base64.b64encode(content_bytes).decode("utf-8")
-    body = {
-        "message": message,
-        "content": content_b64,
-        "branch": branch
-    }
-    if sha:
-        body["sha"] = sha
-    r = requests.put(api, json=body, headers=headers, timeout=20)
-    if r.status_code in (200, 201):
-        j = r.json()
-        return True, j["content"]["sha"]
-    else:
-        # return False and full response text for debugging
-        raise Exception(f"GitHub PUT failed: {r.status_code} {r.text}")
+# ---------- Add to Master ----------
+def add_recipe_to_master(recipe, item_type, repo=None, branch="main", use_github=False):
+    new_row = pd.DataFrame([{"Recipe": recipe, "Item Type": item_type}])
 
-# ---------- Public functions ----------
-def load_master_list(repo: str = None, token: str = None, branch: str="main") -> Tuple[pd.DataFrame, str]:
-    """
-    Returns (master_df, sha) when using GitHub; or raises exception (so caller can fallback to local).
-    """
-    if repo and token:
-        # try GitHub
-        content, sha = _gh_get_file(repo, MASTER_FN, token, branch=branch)
-        df = pd.read_csv(io.BytesIO(content))
-        return df, sha
-    else:
-        raise Exception("GitHub not configured")
+    master = load_master_list(repo, branch, use_github)
+    updated = pd.concat([master, new_row], ignore_index=True)
 
-def save_master_list(df: pd.DataFrame, repo: str = None, token: str = None, branch: str="main", sha: str=None) -> Tuple[bool, str]:
-    """
-    Save master list. If GitHub configured attempts to push. Returns (ok, new_sha).
-    If GitHub not configured returns (False, None) after writing local file.
-    """
-    csv_bytes = df.to_csv(index=False).encode("utf-8")
-    if repo and token:
-        new_sha = None
-        ok, new_sha = _gh_put_file(repo, MASTER_FN, token, csv_bytes, message="Update master_list.csv", branch=branch, sha=sha)
-        return ok, new_sha
+    if use_github:
+        file = repo.get_contents("master_list.csv", ref=branch)
+        repo.update_file(file.path, "Add recipe", updated.to_csv(index=False), file.sha, branch=branch)
     else:
-        # fallback write
-        df.to_csv(MASTER_FN, index=False)
-        return False, None
+        updated.to_csv("master_list.csv", index=False)
 
-def load_history(repo: str = None, token: str = None, branch: str="main") -> Tuple[pd.DataFrame, str]:
-    if repo and token:
-        content, sha = _gh_get_file(repo, HISTORY_FN, token, branch=branch)
-        df = pd.read_csv(io.BytesIO(content), parse_dates=["Date"], dayfirst=False)
-        return df, sha
-    else:
-        raise Exception("GitHub not configured")
+# ---------- Delete Today ----------
+def delete_today_pick(repo=None, branch="main", use_github=False):
+    today = datetime.today().strftime("%d-%m-%Y")
+    history = load_history(repo, branch, use_github)
+    updated = history[history["Date"] != today]
 
-def save_history(df: pd.DataFrame, repo: str = None, token: str = None, branch: str="main", sha: str=None) -> Tuple[bool, str]:
-    csv_bytes = df.to_csv(index=False).encode("utf-8")
-    if repo and token:
-        ok, new_sha = _gh_put_file(repo, HISTORY_FN, token, csv_bytes, message="Update history.csv", branch=branch, sha=sha)
-        return ok, new_sha
+    if use_github:
+        file = repo.get_contents("history.csv", ref=branch)
+        repo.update_file(file.path, f"Delete today {today}", updated.to_csv(index=False), file.sha, branch=branch)
     else:
-        df.to_csv(HISTORY_FN, index=False)
-        return False, None
+        updated.to_csv("history.csv", index=False)
