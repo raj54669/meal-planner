@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import date, timedelta
 import os
 import textwrap
+from github import Github
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO_NAME = os.getenv("GITHUB_REPO", "raj54669/meal-planner")
