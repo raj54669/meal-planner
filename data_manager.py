@@ -62,3 +62,15 @@ def delete_today_pick(repo=None, branch="main", use_github=False):
         repo.update_file(file.path, f"Delete today {today}", updated.to_csv(index=False), file.sha, branch=branch)
     else:
         updated.to_csv("history.csv", index=False)
+
+# ---------- Utility: Get File SHA ----------
+def get_file_sha(filepath: str) -> str:
+    """Return SHA1 hash of a file for change tracking, or None if file doesn't exist."""
+    if not os.path.exists(filepath):
+        return None
+    sha1 = hashlib.sha1()
+    with open(filepath, "rb") as f:
+        while chunk := f.read(8192):
+            sha1.update(chunk)
+    return sha1.hexdigest()
+
