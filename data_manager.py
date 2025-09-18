@@ -75,3 +75,22 @@ def get_file_sha(filepath: str) -> str:
         while chunk := f.read(8192):
             sha1.update(chunk)
     return sha1.hexdigest()
+
+# ---------- Save Master List ----------
+def save_master_list(df, repo=None, branch="main", use_github=False):
+    """
+    Save the entire master list (overwrite).
+    If use_github=True, update master_list.csv in repo, else save local file.
+    """
+    if use_github and repo:
+        file = repo.get_contents("master_list.csv", ref=branch)
+        repo.update_file(
+            file.path,
+            "Update master list",
+            df.to_csv(index=False),
+            file.sha,
+            branch=branch
+        )
+    else:
+        df.to_csv("master_list.csv", index=False)
+
