@@ -7,12 +7,19 @@ import textwrap
 
 # Try to import repository helpers (if present)
 try:
-    from data_manager import load_master_list, load_history, save_master_list, save_history
+    from data_manager import (
+        load_master_list,
+        load_history,
+        save_master_list,
+        save_history,
+        get_file_sha   # ✅ add this
+    )
 except Exception:
-    #load_master_list = None
+    load_master_list = None
     load_history = None
     save_master_list = None
     save_history = None
+    get_file_sha = None   # ✅ add fallback
 
 try:
     from recommendations import recommend
