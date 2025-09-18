@@ -5,6 +5,10 @@ from datetime import date, timedelta
 import os
 import textwrap
 
+# ---------- File constants ----------
+MASTER_LIST_FILE = "master_list.csv"
+HISTORY_FILE = "history.csv"
+
 # Try to import repository helpers (if present)
 try:
     from data_manager import (
