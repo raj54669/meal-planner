@@ -373,22 +373,101 @@ if page == "Pick Today’s Recipe":
 # -----------------------
 # MASTER LIST (restore Edit & Delete buttons)
 # -----------------------
-elif choice == "Master List":
-    st.subheader("Master List")
-    df = load_master_list()
+elif page == "Master List":
+    st.header("Master List")
+    st.write("Add / Edit / Delete recipes. Edit opens inline editor for the selected row.")
 
-    # Show list with inline buttons (no extra blank spacing)
-    for idx, row in df.iterrows():
-        col1, col2, col3, col4 = st.columns([3, 2, 1, 1])
-        col1.write(row["Recipe"])
-        col2.write(row["Item Type"])
-        with col3:
-            if st.button("✏️ Edit", key=f"edit_{idx}"):
-                st.session_state.edit_index = idx
-        with col4:
-            if st.button("🗑️ Delete", key=f"delete_{idx}"):
-                delete_from_master_list(idx)
-                st.experimental_rerun()
+    # Add recipe form
+    with st.form("add_recipe", clear_on_submit=True):
+        new_name = st.text_input("Recipe Name")
+        new_type = st.text_input("Item Type")
+        submitted = st.form_submit_button("Add Recipe")
+        if submitted:
+            if not new_name.strip():
+                st.warning("Provide a recipe name.")
+            else:
+                new_master = pd.concat(
+                    [master_df, pd.DataFrame([{"Recipe": new_name.strip(), "Item Type": new_type.strip()}])],
+                    ignore_index=True
+                )
+                ok = try_save_master(new_master, master_sha)
+                if ok:
+                    st.success(f"Added **{new_name}** to master list.")
+                    safe_rerun()
+                else:
+                    st.error("Failed to save master list. Check logs.")
+
+    st.markdown("---")  # separator
+
+    if master_df.empty:
+        st.info("No recipes found. Add some above.")
+    else:
+        # Initialize session keys
+        if "edit_row" not in st.session_state:
+            st.session_state["edit_row"] = None
+        if "delete_row" not in st.session_state:
+            st.session_state["delete_row"] = None
+
+        # Header row
+        cols = st.columns([4, 2, 2, 2])
+        cols[0].markdown("**Recipe**")
+        cols[1].markdown("**Item Type**")
+        cols[2].markdown("**Edit**")
+        cols[3].markdown("**Delete**")
+
+        # Rows
+        for i, row in master_df.reset_index(drop=True).iterrows():
+            cols = st.columns([4, 2, 2, 2])
+            cols[0].write(row["Recipe"])
+            cols[1].write(row["Item Type"])
+
+            # Edit button
+            if cols[2].button("✏️", key=f"edit_btn_{i}"):
+                st.session_state["edit_row"] = i
+                st.session_state["delete_row"] = None
+                safe_rerun()
+
+            # Delete button
+            if cols[3].button("🗑️", key=f"del_btn_{i}"):
+                st.session_state["delete_row"] = i
+                st.session_state["edit_row"] = None
+                safe_rerun()
+
+            # Inline editor
+            if st.session_state.get("edit_row") == i:
+                edit_name = st.text_input("Edit Recipe", value=row["Recipe"], key=f"edit_name_{i}")
+                edit_type = st.text_input("Edit Item Type", value=row["Item Type"], key=f"edit_type_{i}")
+                save_col, cancel_col = st.columns([1,1])
+                if save_col.button("Save", key=f"save_edit_{i}"):
+                    master_df.at[i, "Recipe"] = edit_name
+                    master_df.at[i, "Item Type"] = edit_type
+                    ok = try_save_master(master_df, master_sha)
+                    if ok:
+                        st.success("Updated master list.")
+                        st.session_state["edit_row"] = None
+                        safe_rerun()
+                    else:
+                        st.error("Failed to save master list.")
+                if cancel_col.button("Cancel", key=f"cancel_edit_{i}"):
+                    st.session_state["edit_row"] = None
+                    safe_rerun()
+
+            # Delete confirm
+            if st.session_state.get("delete_row") == i:
+                st.warning(f"Confirm delete '{row['Recipe']}'?")
+                yes_col, no_col = st.columns([1,1])
+                if yes_col.button("Yes Delete", key=f"confirm_del_{i}"):
+                    new_master = master_df.drop(i).reset_index(drop=True)
+                    ok = try_save_master(new_master, master_sha)
+                    if ok:
+                        st.success("Deleted entry.")
+                        st.session_state["delete_row"] = None
+                        safe_rerun()
+                    else:
+                        st.error("Failed to delete entry.")
+                if no_col.button("Cancel", key=f"cancel_del_{i}"):
+                    st.session_state["delete_row"] = None
+                    safe_rerun()
 
 # -----------------------
 # HISTORY (Item Type shown; sorted oldest → newest)
