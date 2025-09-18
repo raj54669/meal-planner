@@ -15,17 +15,18 @@ try:
         load_master_list,
         load_history,
         save_today_pick,
-        add_recipe_to_master,
+        save_master_list,   # ✅ new
         delete_today_pick,
-        get_file_sha   # if you already added it
+        get_file_sha
     )
 except Exception:
     load_master_list = None
     load_history = None
     save_today_pick = None
-    add_recipe_to_master = None
+    save_master_list = None
     delete_today_pick = None
     get_file_sha = None
+    
 try:
     from recommendations import recommend
 except Exception:
@@ -222,29 +223,20 @@ def try_save_master(df, sha=None):
     """
     Try saving the master list (GitHub if available, else fallback to CSV).
     """
-    if add_recipe_to_master and GITHUB_REPO and GITHUB_TOKEN:
+    if save_master_list and GITHUB_REPO and GITHUB_TOKEN:
         try:
-            # call data_manager.add_recipe_to_master with same signature
-            r = add_recipe_to_master(df, sha)
-            if isinstance(r, tuple):
-                return bool(r[0])
-            return bool(r)
-        except TypeError:
-            try:
-                return bool(add_recipe_to_master(df))
-            except Exception:
-                return False
-        except Exception:
+            save_master_list(df, repo=GITHUB_REPO, branch=GITHUB_BRANCH, use_github=True)
+            return True
+        except Exception as e:
+            st.error(f"Failed GitHub save: {e}")
             return False
-
-    # fallback: save locally
-    try:
-        df.to_csv(MASTER_CSV, index=False)
-        return True
-    except Exception:
-        st.error("Failed to persist master list (GitHub + local both failed).")
-        return False
-
+    else:
+        try:
+            df.to_csv(MASTER_CSV, index=False)
+            return True
+        except Exception as e:
+            st.error(f"Failed local save: {e}")
+            return False
 
 def try_save_history(df: pd.DataFrame, history_sha=None):
     """
