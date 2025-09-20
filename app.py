@@ -3,7 +3,6 @@ import streamlit as st
 import pandas as pd
 from datetime import date, timedelta, datetime
 import os
-import textwrap
 from github import Github
 from ui_widgets import display_table
 
@@ -94,16 +93,11 @@ def safe_rerun():
             return
 
 def load_data():
-    """
-    Load master and history via data_manager helpers from GitHub (preferred).
-    Returns: master_df, history_df, master_sha, history_sha
-    """
     master_df = pd.DataFrame(columns=["Recipe", "Item Type"])
     history_df = pd.DataFrame(columns=["Date", "Recipe", "Item Type"])
     master_sha = None
     history_sha = None
 
-    # Try GitHub helpers path
     if callable(load_master_list) and callable(load_history) and GITHUB_REPO and GITHUB_TOKEN:
         try:
             master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
@@ -114,7 +108,6 @@ def load_data():
         except Exception:
             history_df = pd.DataFrame(columns=["Date", "Recipe", "Item Type"])
 
-    # Ensure columns and parse dates
     master_df.columns = [c.strip() for c in master_df.columns]
     history_df.columns = [c.strip() for c in history_df.columns]
 
@@ -145,7 +138,7 @@ def try_save_master_list(df: pd.DataFrame):
 
         st.success("✅ Master list updated on GitHub!")
 
-        # Reload fresh from GitHub
+        st.cache_data.clear()
         if callable(load_master_list):
             df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
 
@@ -162,7 +155,6 @@ def try_save_history(df: pd.DataFrame):
             st.error("GitHub repo or token not configured.")
             return False
 
-        # Always fetch latest sha before saving
         sha = None
         if callable(get_file_sha):
             sha = get_file_sha(HISTORY_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
@@ -170,11 +162,11 @@ def try_save_history(df: pd.DataFrame):
         save_history(df, repo=GITHUB_REPO, branch=GITHUB_BRANCH, sha=sha)
 
         st.success("✅ History updated on GitHub!")
-        
-        # Reload fresh from GitHub to reflect instantly
+
+        st.cache_data.clear()
         if callable(load_history):
             df = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
-        
+
         safe_rerun()
         return True
     except Exception as e:
@@ -188,8 +180,7 @@ def try_save_history(df: pd.DataFrame):
 master_df, history_df, master_sha, history_sha = load_data()
 
 # -----------------------
-# Top-level Title (visible on every page)
-
+# Title
 # -----------------------
 st.title("🍴 NextBite – Meal Planner App")
 
@@ -208,15 +199,14 @@ if not history_df.empty and "Date" in history_df.columns:
             today_pick = sel.sort_values("Date", ascending=False).iloc[0]["Recipe"]
 
 # -----------------------
-# PICK TODAY (unchanged primary flow)
+# PICK TODAY
 # -----------------------
-with tab1:  # Pick Today’s Recipe
+with tab1:
     st.header("Pick Today’s Recipe")
     if today_pick:
         st.success(f"✅ Today's pick is **{today_pick}** (saved earlier).")
         st.write("If you want to change it, delete today's entry from the History tab then pick again.")
 
-    st.write("")  # spacer
     mode = st.radio("Choose option:", ["By Item Type", "Today's Suggestions"], horizontal=True)
 
     if mode == "By Item Type":
@@ -230,7 +220,6 @@ with tab1:  # Pick Today’s Recipe
             if selected_type and selected_type != "-- Choose --":
                 filtered = master_df[master_df["Item Type"] == selected_type].copy()
 
-                # compute last eaten & days ago using history
                 last_dates = {}
                 if not history_df.empty and "Date" in history_df.columns:
                     tmp = history_df.dropna(subset=["Date"]).sort_values("Date", ascending=False)
@@ -238,34 +227,23 @@ with tab1:  # Pick Today’s Recipe
 
                 filtered["Last Eaten"] = filtered["Recipe"].map(lambda r: last_dates.get(r) if r in last_dates else pd.NaT)
                 filtered["Days Ago"] = filtered["Last Eaten"].apply(lambda d: (today - pd.to_datetime(d).date()).days if pd.notna(d) else pd.NA)
-                
                 filtered = filtered.sort_values(by="Days Ago", ascending=False)
-                
-                #html = df_to_html_table(filtered[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
-                #st.markdown(html, unsafe_allow_html=True)
 
                 display_table(filtered[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
 
-                # selection radio below the table
                 choices = filtered["Recipe"].astype(str).tolist()
                 if choices:
                     recipe_choice = st.radio("Select recipe to save for today", choices, key="bytype_choice")
                     if st.button("Save Today's Pick (By Type)"):
                         try:
-                            save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
-                    
+                            history_df = save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
                             st.cache_data.clear()
-                            history_df = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
-                    
                             st.success(f"Saved **{recipe_choice}** to history (GitHub updated).")
-                            st.dataframe(history_df)
-                    
+                            safe_rerun()
                         except Exception as e:
                             st.error(f"Failed to save history: {e}")
 
-
     else:
-        # Today's Suggestions
         if recommend:
             rec_df = recommend(master_df, history_df, min_count=5, max_count=7)
         else:
@@ -279,9 +257,6 @@ with tab1:  # Pick Today’s Recipe
             if "Days Ago" in rec_df.columns:
                 rec_df["Days Ago"] = rec_df["Days Ago"].apply(lambda x: int(x) if pd.notna(x) else pd.NA)
 
-            #html = df_to_html_table(rec_df[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
-            #st.markdown(html, unsafe_allow_html=True)
-
             display_table(rec_df[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
 
             choices = rec_df["Recipe"].astype(str).tolist()
@@ -292,21 +267,21 @@ with tab1:  # Pick Today’s Recipe
                     item_type = chosen_row.get("Item Type", "")
                     new_row = {"Date": today.strftime("%Y-%m-%d"), "Recipe": recipe_choice, "Item Type": item_type}
                     new_history = pd.concat([history_df, pd.DataFrame([new_row])], ignore_index=True)
-                    ok = try_save_history(new_history)
-                    if ok:
-                        st.success(f"Saved **{recipe_choice}** to history.")
+                    try:
+                        history_df = save_history(new_history, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+                        st.cache_data.clear()
+                        st.success(f"Saved **{recipe_choice}** to history (GitHub updated).")
                         safe_rerun()
-                    else:
-                        st.error("Failed to save history. Check logs.")
+                    except Exception as e:
+                        st.error(f"Failed to save history: {e}")
 
 # -----------------------
-# MASTER LIST (restore Edit & Delete buttons)
+# MASTER LIST
 # -----------------------
-with tab2:  # Master List
+with tab2:
     st.header("Master List")
     st.write("Add / Edit / Delete recipes. Edit opens inline editor for the selected row.")
 
-    # Always reload latest master list to reflect changes
     if callable(load_master_list) and GITHUB_REPO:
         master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
         try:
@@ -318,7 +293,6 @@ with tab2:  # Master List
         master_df = pd.DataFrame(columns=["Recipe", "Item Type"])
         master_sha = None
 
-    # Add recipe form
     with st.form("add_recipe", clear_on_submit=True):
         new_name = st.text_input("Recipe Name")
         new_type = st.text_input("Item Type")
@@ -333,53 +307,44 @@ with tab2:  # Master List
                 )
                 ok = try_save_master_list(new_master)
                 if ok:
+                    st.cache_data.clear()
+                    master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
                     st.success(f"Added **{new_name}** to master list.")
-                    # 🔥 Reload both DataFrame and SHA
-                    if callable(load_master_list) and GITHUB_REPO:
-                        master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
-                    if callable(get_file_sha):
-                        master_sha = get_file_sha(MASTER_LIST_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
                     safe_rerun()
                 else:
                     st.error("Failed to save master list. Check logs.")
 
-    st.markdown("")  # spacing
+    st.markdown("")
 
     if master_df.empty:
         st.info("No recipes found. Add some above.")
     else:
-        # Initialize session keys for editing/deleting
         if "edit_row" not in st.session_state:
             st.session_state["edit_row"] = None
         if "delete_row" not in st.session_state:
             st.session_state["delete_row"] = None
 
-        # Header row
         cols = st.columns([4, 2, 1, 1])
         cols[0].markdown("**Recipe**")
         cols[1].markdown("**Item Type**")
         cols[2].markdown("**Edit**")
         cols[3].markdown("**Delete**")
 
-        # Row controls: Edit / Delete (inline)
         for i, row in master_df.reset_index(drop=True).iterrows():
             cols = st.columns([4, 2, 1, 1])
             cols[0].write(row["Recipe"])
             cols[1].write(row["Item Type"])
 
-            # Edit button
             if cols[2].button("✏️", key=f"edit_btn_{i}"):
                 st.session_state["edit_row"] = i
                 st.session_state["delete_row"] = None
                 safe_rerun()
 
-            # Delete button
             if cols[3].button("🗑️", key=f"del_btn_{i}"):
                 st.session_state["delete_row"] = i
                 st.session_state["edit_row"] = None
                 safe_rerun()
 
-            # If this row is selected for edit, show inline editor
             if st.session_state.get("edit_row") == i:
                 st.markdown("---")
                 edit_name = st.text_input(f"Edit name ({i}):", value=row["Recipe"], key=f"edit_name_{i}")
@@ -387,14 +352,12 @@ with tab2:  # Master List
                 if st.button("Save Edit", key=f"save_edit_{i}"):
                     master_df.at[i, "Recipe"] = edit_name
                     master_df.at[i, "Item Type"] = edit_type
-                    ok = try_save_master_list(master_df, master_sha)
+                    ok = try_save_master_list(master_df)
                     if ok:
+                        st.cache_data.clear()
+                        master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
                         st.success("Updated master list.")
                         st.session_state["edit_row"] = None
-                        if callable(load_master_list) and GITHUB_REPO:
-                            master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
-                        if callable(get_file_sha):
-                            master_sha = get_file_sha(MASTER_LIST_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
                         safe_rerun()
                     else:
                         st.error("Failed to save master list. See logs.")
@@ -402,19 +365,16 @@ with tab2:  # Master List
                     st.session_state["edit_row"] = None
                     safe_rerun()
 
-            # If deletion was requested for this row, ask confirm
             if st.session_state.get("delete_row") == i:
                 st.warning(f"Confirm delete '{row['Recipe']}'?")
                 if st.button("Confirm Delete", key=f"confirm_del_{i}"):
                     new_master = master_df.drop(i).reset_index(drop=True)
                     ok = try_save_master_list(new_master)
                     if ok:
+                        st.cache_data.clear()
+                        master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
                         st.success("Deleted entry.")
                         st.session_state["delete_row"] = None
-                        if callable(load_master_list) and GITHUB_REPO:
-                            master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
-                        if callable(get_file_sha):
-                            master_sha = get_file_sha(MASTER_LIST_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
                         safe_rerun()
                     else:
                         st.error("Failed to delete entry. See logs.")
@@ -423,19 +383,17 @@ with tab2:  # Master List
                     safe_rerun()
 
 # -----------------------
-# HISTORY (Item Type shown; sorted oldest → newest)
+# HISTORY
 # -----------------------
-with tab3:  # History
+with tab3:
     st.header("History")
     st.write("Use the static filter buttons below to view historical picks.")
 
-    # Add a small CSS rule so the button text never wraps
     st.markdown(
         "<style>div.stButton > button { white-space: nowrap; }</style>",
         unsafe_allow_html=True,
     )
 
-    # 🔄 Always reload history fresh from GitHub
     if callable(load_history) and GITHUB_REPO:
         try:
             history_df = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
@@ -444,7 +402,6 @@ with tab3:  # History
             history_df = pd.DataFrame()
             history_sha = None
 
-    # Center buttons (inline side-by-side)
     col_left, col_mid, col_right = st.columns([1, 2, 1])
     with col_mid:
         b1, b2 = st.columns([1, 1])
@@ -452,58 +409,45 @@ with tab3:  # History
         btn_prev_month = b2.button("Previous Month", key="history_prev_month")
 
     filtered = history_df.copy()
-    
+
     if not filtered.empty and "Date" in filtered.columns:
-        # 🔑 Ensure Date column is datetime
         filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce")
-    
-        # fill Item Type from master if missing
+
         master_map = dict(zip(master_df["Recipe"].astype(str), master_df["Item Type"].astype(str)))
         filtered["Item Type"] = filtered["Item Type"].fillna(filtered["Recipe"].map(master_map))
-    
-        # apply filters
+
         today_local = date.today()
         if btn_prev_month:
             first_of_this = today_local.replace(day=1)
             last_of_prev = first_of_this - timedelta(days=1)
             first_of_prev = last_of_prev.replace(day=1)
             filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
-        else:  # Default = Current Month
+        else:
             first = today_local.replace(day=1)
             filtered = filtered[(filtered["Date"].dt.date >= first) & (filtered["Date"].dt.date <= today_local)]
 
-        # compute Days Ago + format Date
         filtered = filtered.copy()
         filtered["Days Ago"] = filtered["Date"].apply(
             lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA
         )
         filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
 
-        # Sort oldest → newest
         try:
             filtered["__sort_date__"] = pd.to_datetime(filtered["Date"], format="%d-%m-%Y", errors="coerce")
             filtered = filtered.sort_values("__sort_date__", ascending=True).drop(columns="__sort_date__")
         except Exception:
             filtered = filtered.sort_index(ascending=True)
 
-        # Show styled table
         display_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
 
-        # Remove today's entry
         if st.button("Remove Today's Entry (if exists)"):
             try:
                 today_str = date.today().strftime("%Y-%m-%d")
-                delete_today_pick(today_str, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
-        
+                history_df = delete_today_pick(today_str, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
                 st.cache_data.clear()
-                history_df = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
-        
                 st.success("Removed today's entry from GitHub.")
-                st.dataframe(history_df)
-        
+                safe_rerun()
             except Exception as e:
                 st.error(f"Unable to remove today's entry: {e}")
-
-
     else:
         st.info("History is empty.")
