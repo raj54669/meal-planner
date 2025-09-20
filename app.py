@@ -282,6 +282,10 @@ elif page == "Master List":
     else:
         master_df = pd.DataFrame(columns=["Recipe", "Item Type"])
 
+    # ✅ Sort by Item Type, then Recipe
+    if not master_df.empty:
+        master_df = master_df.sort_values(by=["Item Type", "Recipe"], ascending=[True, True]).reset_index(drop=True)
+
     with st.form("add_recipe", clear_on_submit=True):
         new_name = st.text_input("Recipe Name")
         new_type = st.text_input("Item Type")
@@ -290,6 +294,8 @@ elif page == "Master List":
                 [master_df, pd.DataFrame([{"Recipe": new_name.strip(), "Item Type": new_type.strip()}])],
                 ignore_index=True
             )
+            # ✅ Re-sort after adding
+            new_master = new_master.sort_values(by=["Item Type", "Recipe"], ascending=[True, True]).reset_index(drop=True)
             try_save_master_list(new_master, master_sha)
 
     if not master_df.empty:
@@ -297,15 +303,18 @@ elif page == "Master List":
             st.session_state["edit_row"] = None
         if "delete_row" not in st.session_state:
             st.session_state["delete_row"] = None
+
         cols = st.columns([4, 2, 1, 1])
         cols[0].markdown("**Recipe**")
         cols[1].markdown("**Item Type**")
         cols[2].markdown("**Edit**")
         cols[3].markdown("**Delete**")
+
         for i, row in master_df.reset_index(drop=True).iterrows():
             cols = st.columns([4, 2, 1, 1])
             cols[0].write(row["Recipe"])
             cols[1].write(row["Item Type"])
+
             if cols[2].button("✏️", key=f"edit_btn_{i}"):
                 st.session_state["edit_row"] = i
                 st.session_state["delete_row"] = None
@@ -314,16 +323,20 @@ elif page == "Master List":
                 st.session_state["delete_row"] = i
                 st.session_state["edit_row"] = None
                 safe_rerun()
+
             if st.session_state.get("edit_row") == i:
                 edit_name = st.text_input(f"Edit name ({i}):", value=row["Recipe"], key=f"edit_name_{i}")
                 edit_type = st.text_input(f"Edit type ({i}):", value=row["Item Type"], key=f"edit_type_{i}")
                 if st.button("Save Edit", key=f"save_edit_{i}"):
                     master_df.at[i, "Recipe"] = edit_name
                     master_df.at[i, "Item Type"] = edit_type
+                    # ✅ Re-sort after editing
+                    master_df = master_df.sort_values(by=["Item Type", "Recipe"], ascending=[True, True]).reset_index(drop=True)
                     try_save_master_list(master_df, master_sha)
                 if st.button("Cancel", key=f"cancel_edit_{i}"):
                     st.session_state["edit_row"] = None
                     safe_rerun()
+
             if st.session_state.get("delete_row") == i:
                 st.warning(f"Confirm delete '{row['Recipe']}'?")
                 if st.button("Confirm Delete", key=f"confirm_del_{i}"):
@@ -334,6 +347,28 @@ elif page == "Master List":
                     safe_rerun()
     else:
         st.info("No recipes found.")
+
+
+# -----------------------
+# HISTORY - By Item Type
+# -----------------------
+elif history_view == "By Item Type":
+    st.subheader("History by Item Type")
+    history_df = load_history(GITHUB_REPO, GITHUB_BRANCH)
+
+    if not history_df.empty:
+        # ✅ Sort by Item Type, then Recipe
+        history_df = history_df.sort_values(by=["Item Type", "Recipe"], ascending=[True, True]).reset_index(drop=True)
+
+        grouped = history_df.groupby("Item Type")
+        for itype, group in grouped:
+            st.markdown(f"### {itype}")
+            for _, row in group.iterrows():
+                st.write(f"- {row['Recipe']} ({row['Date']})")
+    else:
+        st.info("No history available.")
+
+
 # -----------------------
 # HISTORY
 # -----------------------
