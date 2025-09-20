@@ -59,6 +59,7 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
         text-align: center;
         font-weight: 600;   /* Boldness applied to both header and data */
         font-size: 13px;
+        color: black;
     }}
     .nb-table thead th {{
         background: #004a99;
