@@ -369,68 +369,60 @@ elif history_view == "By Item Type":
         st.info("No history available.")
 
 
-# -----------------------
+# -------------------------------
 # HISTORY
-# -----------------------
-elif page == "History":
-    st.header("History")
-    st.write("Use the filter buttons below.")
+# -------------------------------
+st.header("History")
 
+# Load history once
+history_df = load_history(GITHUB_TOKEN)
+
+if history_df is not None and not history_df.empty:
     col1, col2, col3, col4 = st.columns(4)
     btn_prev_month = col1.button("Previous Month")
     btn_curr_month = col2.button("Current Month")
     btn_prev_week = col3.button("Previous Week")
     btn_curr_week = col4.button("Current Week")
 
-    filtered = history_df.copy()
+    today = date.today()
 
-    if not filtered.empty and "Date" in filtered.columns:
-        # ✅ Ensure Date column is datetime
-        filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce")
+    if btn_prev_month:
+        start_prev_month = (today.replace(day=1) - pd.DateOffset(months=1)).date()
+        end_prev_month = (today.replace(day=1) - pd.DateOffset(days=1)).date()
+        filtered = history_df[
+            (pd.to_datetime(history_df["Date"]).dt.date >= start_prev_month) &
+            (pd.to_datetime(history_df["Date"]).dt.date <= end_prev_month)
+        ]
+        st.subheader("Previous Month")
+        st.dataframe(filtered)
 
-        master_map = dict(zip(master_df["Recipe"].astype(str), master_df["Item Type"].astype(str)))
-        filtered["Item Type"] = filtered["Item Type"].fillna(filtered["Recipe"].map(master_map))
+    elif btn_curr_month:
+        start_curr_month = today.replace(day=1)
+        filtered = history_df[
+            (pd.to_datetime(history_df["Date"]).dt.date >= start_curr_month)
+        ]
+        st.subheader("Current Month")
+        st.dataframe(filtered)
 
-        today_local = date.today()
+    elif btn_prev_week:
+        start_prev_week = today - pd.DateOffset(weeks=1, weekday=0)
+        end_prev_week = start_prev_week + pd.DateOffset(days=6)
+        filtered = history_df[
+            (pd.to_datetime(history_df["Date"]).dt.date >= start_prev_week.date()) &
+            (pd.to_datetime(history_df["Date"]).dt.date <= end_prev_week.date())
+        ]
+        st.subheader("Previous Week")
+        st.dataframe(filtered)
 
-        if btn_prev_month:
-            first_of_this = today_local.replace(day=1)
-            last_of_prev = first_of_this - timedelta(days=1)
-            first_of_prev = last_of_prev.replace(day=1)
-            filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
-
-        elif btn_curr_month:
-            first = today_local.replace(day=1)
-            filtered = filtered[(filtered["Date"].dt.date >= first) & (filtered["Date"].dt.date <= today_local)]
-
-        elif btn_prev_week:
-            start_this_week = today_local - timedelta(days=today_local.weekday())
-            prev_start = start_this_week - timedelta(days=7)
-            prev_end = start_this_week - timedelta(days=1)
-            filtered = filtered[(filtered["Date"].dt.date >= prev_start) & (filtered["Date"].dt.date <= prev_end)]
-
-        elif btn_curr_week:
-            start_this_week = today_local - timedelta(days=today_local.weekday())
-            filtered = filtered[(filtered["Date"].dt.date >= start_this_week) & (filtered["Date"].dt.date <= today_local)]
-
-        # ✅ Days Ago calculation
-        filtered["Days Ago"] = filtered["Date"].apply(lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA)
-
-        # ✅ Format Date for display
-        filtered["Date"] = filtered["Date"].dt.strftime("%d-%m-%Y")
-
-        # ✅ Sort by date
-        try:
-            filtered["__sort_date__"] = pd.to_datetime(filtered["Date"], format="%d-%m-%Y", errors="coerce")
-            filtered = filtered.sort_values("__sort_date__", ascending=True).drop(columns="__sort_date__")
-        except Exception:
-            filtered = filtered.sort_index(ascending=True)
-
-        st.markdown(df_to_html_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]]), unsafe_allow_html=True)
-
-        if st.button("Remove Today's Entry (if exists)"):
-            new_hist = history_df[pd.to_datetime(history_df["Date"], errors="coerce").dt.date != date.today()].reset_index(drop=True)
-            try_save_history(new_hist, history_sha)
+    elif btn_curr_week:
+        start_curr_week = today - pd.DateOffset(days=today.weekday())
+        filtered = history_df[
+            (pd.to_datetime(history_df["Date"]).dt.date >= start_curr_week.date())
+        ]
+        st.subheader("Current Week")
+        st.dataframe(filtered)
 
     else:
-        st.info("History is empty.")
+        st.info("Select a button to view history.")
+else:
+    st.info("No history available.")
