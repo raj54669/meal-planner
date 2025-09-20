@@ -251,14 +251,21 @@ with tab1:  # Pick Today’s Recipe
                 if choices:
                     recipe_choice = st.radio("Select recipe to save for today", choices, key="bytype_choice")
                     if st.button("Save Today's Pick (By Type)"):
-                        new_row = {"Date": today.strftime("%Y-%m-%d"), "Recipe": recipe_choice, "Item Type": selected_type}
-                        new_history = pd.concat([history_df, pd.DataFrame([new_row])], ignore_index=True)
-                        ok = try_save_history(new_history)
-                        if ok:
-                            st.success(f"Saved **{recipe_choice}** to history.")
-                            safe_rerun()
-                        else:
-                            st.error("Failed to save history. Check logs.")
+                        try:
+                            # save directly to GitHub
+                            save_today_pick(recipe_choice, selected_type, repo=repo, branch="main")
+                    
+                            # clear Streamlit cache so fresh data loads
+                            st.cache_data.clear()
+                    
+                            # reload updated history from GitHub
+                            history_df = load_history(repo, branch="main")
+                    
+                            st.success(f"Saved **{recipe_choice}** to history (GitHub updated).")
+                            st.dataframe(history_df)
+                    
+                        except Exception as e:
+        st.error(f"Failed to save history: {e}")
 
     else:
         # Today's Suggestions
