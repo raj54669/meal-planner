@@ -253,7 +253,7 @@ with tab1:  # Pick Today’s Recipe
                     if st.button("Save Today's Pick (By Type)"):
                         new_row = {"Date": today.strftime("%Y-%m-%d"), "Recipe": recipe_choice, "Item Type": selected_type}
                         new_history = pd.concat([history_df, pd.DataFrame([new_row])], ignore_index=True)
-                        ok = try_save_history(new_history, history_sha)
+                        ok = try_save_history(new_history)
                         if ok:
                             st.success(f"Saved **{recipe_choice}** to history.")
                             safe_rerun()
@@ -288,7 +288,7 @@ with tab1:  # Pick Today’s Recipe
                     item_type = chosen_row.get("Item Type", "")
                     new_row = {"Date": today.strftime("%Y-%m-%d"), "Recipe": recipe_choice, "Item Type": item_type}
                     new_history = pd.concat([history_df, pd.DataFrame([new_row])], ignore_index=True)
-                    ok = try_save_history(new_history, history_sha)
+                    ok = try_save_history(new_history)
                     if ok:
                         st.success(f"Saved **{recipe_choice}** to history.")
                         safe_rerun()
