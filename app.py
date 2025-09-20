@@ -74,7 +74,8 @@ st.set_page_config(page_title="NextBite – Meal Planner App", page_icon="🍴",
 st.markdown(
     """
     <style>
-    .app-container > .main > .block-container { padding-top: 1rem !important; }
+    .app-container > .main > .block-container { padding-top: 0rem; }
+    header {visibility: hidden;}
     </style>
     """,
     unsafe_allow_html=True,
