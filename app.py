@@ -29,6 +29,7 @@ try:
         load_history,
         save_today_pick,
         save_master_list,   # ✅ new
+        save_history,
         delete_today_pick,
         get_file_sha
     )
