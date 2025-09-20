@@ -1,4 +1,3 @@
-#ui_widgets.py
 import streamlit as st
 import pandas as pd
 
@@ -37,7 +36,7 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
         .custom-table th {
             background: #fafafa;
             text-align: left;
-            font-weight: bold;
+            font-weight: bold; /* keep all headers bold */
         }
         .custom-table td.normal-col {
             text-align: left;
@@ -49,7 +48,7 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
         }
         .custom-table th.days-col {
             text-align: center !important; /* center header */
-            font-weight: normal;           /* remove bold from header */
+            font-weight: bold;             /* keep header bold */
         }
     </style>
     """
