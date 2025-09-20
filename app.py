@@ -133,12 +133,12 @@ def load_data():
 
     if load_master_list and load_history and GITHUB_REPO and GITHUB_TOKEN:
         try:
-            m = load_master_list(GITHUB_REPO, GITHUB_BRANCH, use_github=True)
+            m = load_master_list(GITHUB_REPO, GITHUB_BRANCH)
             master_df = m
         except Exception:
             master_df = pd.DataFrame(columns=["Recipe", "Item Type"])
         try:
-            h = load_history(GITHUB_REPO, GITHUB_BRANCH, use_github=True)
+            h = load_history(GITHUB_REPO, GITHUB_BRANCH)
             history_df = h
         except Exception:
             history_df = pd.DataFrame(columns=["Date", "Recipe", "Item Type"])
