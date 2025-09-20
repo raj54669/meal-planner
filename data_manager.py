@@ -20,16 +20,25 @@ def load_history(repo, branch="main"):
         return pd.DataFrame(columns=["Date", "Recipe", "Item Type"])
 
 # ---------- Save Today’s Pick ----------
-def save_today_pick(row: dict, repo, branch="main"):
-    history = load_history(repo, branch)
-    updated = pd.concat([history, pd.DataFrame([row])], ignore_index=True)
+def save_today_pick(recipe, item_type, repo=None, branch="main", use_github=False):
+    today = datetime.today().strftime("%d-%m-%Y")
+    new_row = pd.DataFrame([{"Date": today, "Recipe": recipe, "Item Type": item_type}])
 
-    try:
+    history = load_history(repo, branch, use_github)
+    updated = pd.concat([history, new_row], ignore_index=True)
+
+    if use_github:
         file = repo.get_contents("history.csv", ref=branch)
-        repo.update_file(file.path, "Update history", updated.to_csv(index=False), file.sha, branch=branch)
-    except Exception:
-        repo.create_file("history.csv", "Create history", updated.to_csv(index=False), branch=branch)
-
+        repo.update_file(
+            file.path,
+            f"Update history {today}",
+            updated.to_csv(index=False),
+            file.sha,
+            branch=branch
+        )
+    else:
+        updated.to_csv("history.csv", index=False)
+        
 # ---------- Add to Master ----------
 def add_recipe_to_master(recipe, item_type, repo, branch="main"):
     master = load_master_list(repo, branch)
