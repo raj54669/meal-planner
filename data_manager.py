@@ -5,7 +5,7 @@ import hashlib
 import os
 
 # ---------- Load Master ----------
-def load_master_list(repo=None, branch="main", use_github=False):
+def load_master_list(repo=None, token=None, branch="main", use_github=False):
     try:
         if use_github:
             file = repo.get_contents("master_list.csv", ref=branch)
@@ -16,7 +16,7 @@ def load_master_list(repo=None, branch="main", use_github=False):
         return pd.DataFrame(columns=["Recipe", "Item Type"])
 
 # ---------- Load History ----------
-def load_history(repo=None, branch="main", use_github=False):
+def load_history(repo=None, token=None, branch="main", use_github=False):
     try:
         if use_github:
             file = repo.get_contents("history.csv", ref=branch)
