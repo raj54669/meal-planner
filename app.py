@@ -410,11 +410,9 @@ elif page == "History":
     st.header("History")
     st.write("Use the static filter buttons below to view historical picks.")
 
-    col1, col2, col3, col4 = st.columns(4)
-    btn_prev_month = col1.button("Previous Month")
-    btn_curr_month = col2.button("Current Month")
-    btn_prev_week = col3.button("Previous Week")
-    btn_curr_week = col4.button("Current Week")
+    col1, col2 = st.columns(2)
+    btn_curr_month = col1.button("Current Month")
+    btn_prev_month = col2.button("Previous Month")
 
     filtered = history_df.copy()
 
@@ -430,37 +428,27 @@ elif page == "History":
             last_of_prev = first_of_this - timedelta(days=1)
             first_of_prev = last_of_prev.replace(day=1)
             filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
-        elif btn_curr_month:
+        else:
+            # Default = Current Month
             first = today_local.replace(day=1)
             filtered = filtered[(filtered["Date"].dt.date >= first) & (filtered["Date"].dt.date <= today_local)]
-        elif btn_prev_week:
-            start_this_week = today_local - timedelta(days=today_local.weekday())
-            prev_start = start_this_week - timedelta(days=7)
-            prev_end = start_this_week - timedelta(days=1)
-            filtered = filtered[(filtered["Date"].dt.date >= prev_start) & (filtered["Date"].dt.date <= prev_end)]
-        elif btn_curr_week:
-            start_this_week = today_local - timedelta(days=today_local.weekday())
-            filtered = filtered[(filtered["Date"].dt.date >= start_this_week) & (filtered["Date"].dt.date <= today_local)]
 
         # compute Days Ago and format Date
         filtered = filtered.copy()
-        filtered["Days Ago"] = filtered["Date"].apply(lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA)
+        filtered["Days Ago"] = filtered["Date"].apply(
+            lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA
+        )
         filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
 
         # Sort oldest -> newest (ascending)
         try:
-            # attempt to sort by original parsed Date column if available
             if "Date" in filtered.columns:
-                # We can't sort by formatted string reliably; re-parse
                 filtered["__sort_date__"] = pd.to_datetime(filtered["Date"], format="%d-%m-%Y", errors="coerce")
                 filtered = filtered.sort_values("__sort_date__", ascending=True).drop(columns="__sort_date__")
             else:
                 filtered = filtered.sort_index(ascending=True)
         except Exception:
             filtered = filtered.sort_index(ascending=True)
-
-        #html = df_to_html_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
-        #st.markdown(html, unsafe_allow_html=True)
 
         display_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
 
