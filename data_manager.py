@@ -91,19 +91,16 @@ def save_master_list(df, repo=None, branch="main", use_github=False):
         df.to_csv("master_list.csv", index=False)
 
 # ---------- Save History ----------
-def save_history(df, repo=None, branch="main", use_github=False):
+def save_history(df, repo, branch="main"):
     """
-    Save the history DataFrame either to GitHub (if repo is provided) or to local CSV.
+    Save the history DataFrame to GitHub.
+    If history.csv does not exist, raise an error.
     """
-    if use_github and repo:
-        file = repo.get_contents("history.csv", ref=branch)
-        repo.update_file(
-            file.path,
-            "Update history",
-            df.to_csv(index=False),
-            file.sha,
-            branch=branch
-        )
-    else:
-        df.to_csv("history.csv", index=False)
-
+    file = repo.get_contents("history.csv", ref=branch)  # ❌ will raise if not found
+    repo.update_file(
+        file.path,
+        "Update history",
+        df.to_csv(index=False),
+        file.sha,
+        branch=branch
+    )
