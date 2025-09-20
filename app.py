@@ -407,27 +407,33 @@ with tab2:  # Master List
 with tab3:  # History
     st.header("History")
     st.write("Use the static filter buttons below to view historical picks.")
-    
+
     # Add a small CSS rule so the button text never wraps
     st.markdown(
         "<style>div.stButton > button { white-space: nowrap; }</style>",
         unsafe_allow_html=True,
     )
-    
-    # Use three columns and place the buttons inside the middle column.
-    # This centers the button group. Adjust the ratios if you want different spacing.
+
+    # 🔄 Always reload history fresh from GitHub
+    if callable(load_history) and GITHUB_REPO:
+        try:
+            history_df = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
+            history_sha = get_file_sha(HISTORY_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+        except Exception:
+            history_df = pd.DataFrame()
+            history_sha = None
+
+    # Center buttons (inline side-by-side)
     col_left, col_mid, col_right = st.columns([1, 2, 1])
-    
     with col_mid:
-        # nested two equal columns ensure the buttons are inline and adjacent
         b1, b2 = st.columns([1, 1])
         btn_curr_month = b1.button("Current Month", key="history_curr_month")
         btn_prev_month = b2.button("Previous Month", key="history_prev_month")
-    
+
     filtered = history_df.copy()
 
     if not filtered.empty and "Date" in filtered.columns:
-        # fill Item Type in history from master where missing
+        # fill Item Type from master if missing
         master_map = dict(zip(master_df["Recipe"].astype(str), master_df["Item Type"].astype(str)))
         filtered["Item Type"] = filtered["Item Type"].fillna(filtered["Recipe"].map(master_map))
 
@@ -438,30 +444,28 @@ with tab3:  # History
             last_of_prev = first_of_this - timedelta(days=1)
             first_of_prev = last_of_prev.replace(day=1)
             filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
-        else:
-            # Default = Current Month
+        else:  # Default = Current Month
             first = today_local.replace(day=1)
             filtered = filtered[(filtered["Date"].dt.date >= first) & (filtered["Date"].dt.date <= today_local)]
 
-        # compute Days Ago and format Date
+        # compute Days Ago + format Date
         filtered = filtered.copy()
         filtered["Days Ago"] = filtered["Date"].apply(
             lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA
         )
         filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
 
-        # Sort oldest -> newest (ascending)
+        # Sort oldest → newest
         try:
-            if "Date" in filtered.columns:
-                filtered["__sort_date__"] = pd.to_datetime(filtered["Date"], format="%d-%m-%Y", errors="coerce")
-                filtered = filtered.sort_values("__sort_date__", ascending=True).drop(columns="__sort_date__")
-            else:
-                filtered = filtered.sort_index(ascending=True)
+            filtered["__sort_date__"] = pd.to_datetime(filtered["Date"], format="%d-%m-%Y", errors="coerce")
+            filtered = filtered.sort_values("__sort_date__", ascending=True).drop(columns="__sort_date__")
         except Exception:
             filtered = filtered.sort_index(ascending=True)
 
+        # Show styled table
         display_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
 
+        # Remove today's entry
         if st.button("Remove Today's Entry (if exists)"):
             try:
                 new_hist = history_df[history_df["Date"].dt.date != date.today()].reset_index(drop=True)
