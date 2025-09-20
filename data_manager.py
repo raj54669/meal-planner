@@ -77,18 +77,19 @@ def get_file_sha(filepath: str) -> str:
     return sha1.hexdigest()
 
 # ---------- Save Master List ----------
-def save_master_list(df, repo=None, branch="main", use_github=False):
-    if use_github and repo:
-        file = repo.get_contents("master_list.csv", ref=branch)
-        repo.update_file(
-            file.path,
-            "Update master list",
-            df.to_csv(index=False),
-            file.sha,
-            branch=branch
-        )
-    else:
-        df.to_csv("master_list.csv", index=False)
+def save_master_list(df, repo, branch="main"):
+    """
+    Save the master list DataFrame to GitHub.
+    If master_list.csv does not exist, raise an error.
+    """
+    file = repo.get_contents("master_list.csv", ref=branch)  # ❌ will raise if not found
+    repo.update_file(
+        file.path,
+        "Update master list",
+        df.to_csv(index=False),
+        file.sha,
+        branch=branch
+    )
 
 # ---------- Save History ----------
 def save_history(df, repo, branch="main"):
