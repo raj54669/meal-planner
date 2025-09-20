@@ -5,6 +5,7 @@ from datetime import date, timedelta, datetime
 import os
 import textwrap
 from github import Github
+from ui_widget import display_table
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO_NAME = os.getenv("GITHUB_REPO", "raj54669/meal-planner")
@@ -270,8 +271,10 @@ if page == "Pick Today’s Recipe":
                 
                 filtered = filtered.sort_values(by="Days Ago", ascending=False)
                 
-                html = df_to_html_table(filtered[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
-                st.markdown(html, unsafe_allow_html=True)
+                #html = df_to_html_table(filtered[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
+                #st.markdown(html, unsafe_allow_html=True)
+
+                display_table(filtered[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
 
                 # selection radio below the table
                 choices = filtered["Recipe"].astype(str).tolist()
@@ -302,8 +305,10 @@ if page == "Pick Today’s Recipe":
             if "Days Ago" in rec_df.columns:
                 rec_df["Days Ago"] = rec_df["Days Ago"].apply(lambda x: int(x) if pd.notna(x) else pd.NA)
 
-            html = df_to_html_table(rec_df[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
-            st.markdown(html, unsafe_allow_html=True)
+            #html = df_to_html_table(rec_df[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
+            #st.markdown(html, unsafe_allow_html=True)
+
+            display_table(rec_df[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
 
             choices = rec_df["Recipe"].astype(str).tolist()
             if choices:
@@ -499,8 +504,10 @@ elif page == "History":
         except Exception:
             filtered = filtered.sort_index(ascending=True)
 
-        html = df_to_html_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
-        st.markdown(html, unsafe_allow_html=True)
+        #html = df_to_html_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
+        #st.markdown(html, unsafe_allow_html=True)
+
+        display_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
 
         if st.button("Remove Today's Entry (if exists)"):
             try:
