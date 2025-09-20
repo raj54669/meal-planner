@@ -24,19 +24,26 @@ def recommend(master_df: pd.DataFrame, history_df: pd.DataFrame, min_count: int 
     candidates = master_df.copy()
     candidates["Last Eaten"] = candidates["Recipe"].map(lambda r: last_dates.get(r))
     today = date.today()
+
     def compute_days(d):
         try:
             if pd.isna(d):
                 return pd.NA
-            dt = pd.to_datetime(d).date()
-            return (today - dt).days
+            dt = pd.to_datetime(d, errors="coerce")
+            if pd.isna(dt):
+                return pd.NA
+            return int((today - dt.date()).days)
         except Exception:
-            return None
+            return pd.NA
+
     candidates["Days Ago"] = candidates["Last Eaten"].apply(compute_days)
 
-    # filter out eaten in last 7 days
-    candidates = candidates[~candidates["Days Ago"].apply(lambda x: pd.notna(x) and x < 7)]
-    
+    # convert Days Ago to numeric for safe comparisons
+    candidates["DaysAgo_num"] = pd.to_numeric(candidates["Days Ago"], errors="coerce")
+
+    # filter out eaten in last 7 days: keep rows where DaysAgo_num is NaN (never eaten) or >= 7
+    candidates = candidates[(candidates["DaysAgo_num"].isna()) | (candidates["DaysAgo_num"] >= 7)].copy()
+
     # avoid same item type as last saved day if possible
     last_item_type = None
     if history_df is not None and not history_df.empty and "Item Type" in history_df.columns:
@@ -44,11 +51,10 @@ def recommend(master_df: pd.DataFrame, history_df: pd.DataFrame, min_count: int 
         if not hist.empty:
             last_item_type = hist.iloc[0].get("Item Type")
 
-    # scoring: larger Days Ago => higher priority; None treated as -1 to push down (or up? treat None as very large to give priority)
+    # scoring: larger Days Ago => higher priority; NA treated as "never eaten" and given high score
     def score_row(r):
-        da = r["Days Ago"]
+        da = r.get("DaysAgo_num")
         if pd.isna(da):
-            # never eaten: give a high score
             return 9999 + random.random()
         return float(da) + random.random() * 0.01
 
@@ -58,7 +64,6 @@ def recommend(master_df: pd.DataFrame, history_df: pd.DataFrame, min_count: int 
     candidates = candidates.sort_values("score", ascending=False).reset_index(drop=True)
 
     # try to pick a set that respects the no same-item-type-consecutive rule
-    # simple greedy: pick top until reach max_count, but skip a recipe if it would make two consecutive same item types with previous picked
     picks = []
     picked_types = []
     for _, row in candidates.iterrows():
@@ -67,22 +72,21 @@ def recommend(master_df: pd.DataFrame, history_df: pd.DataFrame, min_count: int 
         itype = row.get("Item Type")
         # if first pick, avoid last_item_type if possible
         if last_item_type and len(picks) == 0 and itype == last_item_type:
-            # skip if there exists other candidate not equal
             others = candidates[candidates["Item Type"] != last_item_type]
             if not others.empty:
                 continue
         # avoid consecutive within picks
         if picked_types and itype == picked_types[-1]:
-            # try skipping if others exist
             continue
         picks.append(row)
         picked_types.append(itype)
 
     # if fewer than min_count, fill with top candidates ignoring item-type constraints
     if len(picks) < min_count:
-        extra_needed = min_count - len(picks)
         for _, row in candidates.iterrows():
-            if any(row.equals(p) for p in picks):
+            # compare by unique index (picks contains Series objects); use Recipe name to decide uniqueness
+            recipe_name = row.get("Recipe")
+            if any(p.get("Recipe") == recipe_name for p in picks):
                 continue
             picks.append(row)
             if len(picks) >= min_count:
@@ -92,7 +96,8 @@ def recommend(master_df: pd.DataFrame, history_df: pd.DataFrame, min_count: int 
         return pd.DataFrame()
 
     rec_df = pd.DataFrame(picks)
-    # drop helper score col
     if "score" in rec_df.columns:
         rec_df = rec_df.drop(columns=["score"])
+    if "DaysAgo_num" in rec_df.columns:
+        rec_df = rec_df.drop(columns=["DaysAgo_num"])
     return rec_df.reset_index(drop=True)
