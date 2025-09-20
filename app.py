@@ -5,7 +5,7 @@ from datetime import date, timedelta, datetime
 import os
 import textwrap
 from github import Github
-from ui_widget import display_table
+from ui_widgets import display_table
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO_NAME = os.getenv("GITHUB_REPO", "raj54669/meal-planner")
