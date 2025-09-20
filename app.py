@@ -233,36 +233,46 @@ def load_data():
     return master_df, history_df, master_sha, history_sha
 
 
-def try_save_master(df, sha=None):
+def try_save_master_list(df: pd.DataFrame, sha=None):
     """
-    Try saving the master list (GitHub if available, else fallback to CSV).
-    """
-    if save_master_list and GITHUB_REPO and GITHUB_TOKEN:
-        try:
-            save_master_list(df, repo=GITHUB_REPO, branch=GITHUB_BRANCH, use_github=True)
-            return True
-        except Exception as e:
-            st.error(f"Failed GitHub save: {e}")
-            return False
-    else:
-        try:
-            df.to_csv(MASTER_CSV, index=False)
-            return True
-        except Exception as e:
-            st.error(f"Failed local save: {e}")
-            return False
-
-def try_save_history(df, sha=None):
-    """
-    Attempt to save history directly to GitHub.
+    Save master_list.csv directly to GitHub.
+    On success → force full app reload.
     """
     try:
+        if not GITHUB_REPO or not GITHUB_TOKEN:
+            st.error("GitHub repo or token not configured.")
+            return False
+
         repo = gh.get_repo(GITHUB_REPO)
-        save_history(df, repo=repo, branch=GITHUB_BRANCH)
+        save_master_list(df, repo=repo, branch=GITHUB_BRANCH, use_github=True)
+
+        st.success("✅ Master list updated successfully!")
+        st.rerun()   # 🔄 full app reload
         return True
     except Exception as e:
-        st.error(f"GitHub save failed: {e}")
+        st.error(f"❌ GitHub save failed: {type(e).__name__} - {e}")
         return False
+
+def try_save_history(df: pd.DataFrame, sha=None):
+    """
+    Save history.csv directly to GitHub.
+    On success → force full app reload.
+    """
+    try:
+        if not GITHUB_REPO or not GITHUB_TOKEN:
+            st.error("GitHub repo or token not configured.")
+            return False
+
+        repo = gh.get_repo(GITHUB_REPO)
+        save_history(df, repo=repo, branch=GITHUB_BRANCH, use_github=True)
+
+        st.success("✅ History updated successfully!")
+        st.rerun()   # 🔄 full app reload
+        return True
+    except Exception as e:
+        st.error(f"❌ GitHub save failed: {type(e).__name__} - {e}")
+        return False
+
 
 # -----------------------
 # Load data
