@@ -431,12 +431,15 @@ with tab3:  # History
         btn_prev_month = b2.button("Previous Month", key="history_prev_month")
 
     filtered = history_df.copy()
-
+    
     if not filtered.empty and "Date" in filtered.columns:
+        # 🔑 Ensure Date column is datetime
+        filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce")
+    
         # fill Item Type from master if missing
         master_map = dict(zip(master_df["Recipe"].astype(str), master_df["Item Type"].astype(str)))
         filtered["Item Type"] = filtered["Item Type"].fillna(filtered["Recipe"].map(master_map))
-
+    
         # apply filters
         today_local = date.today()
         if btn_prev_month:
