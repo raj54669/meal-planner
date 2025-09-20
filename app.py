@@ -133,26 +133,15 @@ def load_data():
 
     if load_master_list and load_history and GITHUB_REPO and GITHUB_TOKEN:
         try:
-            m = load_master_list(GITHUB_REPO, GITHUB_TOKEN, branch=GITHUB_BRANCH)
-            if isinstance(m, tuple):
-                master_df, master_sha = m[0], m[1]
-            else:
-                master_df = m
+            m = load_master_list(GITHUB_REPO, GITHUB_BRANCH, use_github=True)
+            master_df = m
         except Exception:
             master_df = pd.DataFrame(columns=["Recipe", "Item Type"])
         try:
-            h = load_history(GITHUB_REPO, GITHUB_TOKEN, branch=GITHUB_BRANCH)
-            if isinstance(h, tuple):
-                history_df, history_sha = h[0], h[1]
-            else:
-                history_df = h
+            h = load_history(GITHUB_REPO, GITHUB_BRANCH, use_github=True)
+            history_df = h
         except Exception:
             history_df = pd.DataFrame(columns=["Date", "Recipe", "Item Type"])
-
-    if master_df.empty and os.path.exists(MASTER_LIST_FILE):
-        master_df = pd.read_csv(MASTER_LIST_FILE)
-    if history_df.empty and os.path.exists(HISTORY_FILE):
-        history_df = pd.read_csv(HISTORY_FILE)
 
     master_df.columns = [c.strip() for c in master_df.columns]
     history_df.columns = [c.strip() for c in history_df.columns]
@@ -175,7 +164,7 @@ def try_save_master_list(df: pd.DataFrame, sha=None):
             st.error("GitHub not configured.")
             return False
         repo = gh.get_repo(GITHUB_REPO_NAME)
-        save_master_list(df, repo=repo, branch=GITHUB_BRANCH, use_github=True)
+        save_master_list(df, repo=repo, branch=GITHUB_BRANCH)   # ✅ FIXED: no use_github
         st.success("✅ Master list updated successfully!")
         st.rerun()
         return True
@@ -189,7 +178,7 @@ def try_save_history(df: pd.DataFrame, sha=None):
             st.error("GitHub not configured.")
             return False
         repo = gh.get_repo(GITHUB_REPO_NAME)
-        save_history(df, repo=repo, branch=GITHUB_BRANCH, use_github=True)
+        save_history(df, repo=repo, branch=GITHUB_BRANCH)   # ✅ FIXED: no use_github
         st.success("✅ History updated successfully!")
         st.rerun()
         return True
