@@ -252,20 +252,17 @@ with tab1:  # Pick Today’s Recipe
                     recipe_choice = st.radio("Select recipe to save for today", choices, key="bytype_choice")
                     if st.button("Save Today's Pick (By Type)"):
                         try:
-                            # save directly to GitHub
-                            save_today_pick(recipe_choice, selected_type, repo=repo, branch="main")
+                            save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
                     
-                            # clear Streamlit cache so fresh data loads
                             st.cache_data.clear()
-                    
-                            # reload updated history from GitHub
-                            history_df = load_history(repo, branch="main")
+                            history_df = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
                     
                             st.success(f"Saved **{recipe_choice}** to history (GitHub updated).")
                             st.dataframe(history_df)
                     
                         except Exception as e:
                             st.error(f"Failed to save history: {e}")
+
 
     else:
         # Today's Suggestions
@@ -495,14 +492,18 @@ with tab3:  # History
         # Remove today's entry
         if st.button("Remove Today's Entry (if exists)"):
             try:
-                new_hist = history_df[history_df["Date"].dt.date != date.today()].reset_index(drop=True)
-                ok = try_save_history(new_hist)
-                if ok:
-                    st.success("Removed today's entry.")
-                    safe_rerun()
-                else:
-                    st.error("Failed to update history. Check logs.")
-            except Exception:
-                st.error("Unable to remove today's entry. Check history data format.")
+                today_str = date.today().strftime("%Y-%m-%d")
+                delete_today_pick(today_str, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+        
+                st.cache_data.clear()
+                history_df = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
+        
+                st.success("Removed today's entry from GitHub.")
+                st.dataframe(history_df)
+        
+            except Exception as e:
+                st.error(f"Unable to remove today's entry: {e}")
+
+
     else:
         st.info("History is empty.")
