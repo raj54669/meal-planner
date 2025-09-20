@@ -131,16 +131,24 @@ def load_data():
     return master_df, history_df, master_sha, history_sha
 
 
-def try_save_master_list(df: pd.DataFrame, sha=None):
-    """
-    Save master_list.csv directly to GitHub via data_manager.save_master_list
-    """
+def try_save_master_list(df: pd.DataFrame):
     try:
         if not GITHUB_REPO or not GITHUB_TOKEN:
             st.error("GitHub repo or token not configured.")
             return False
-        save_master_list(df, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
-        st.success("✅ Master list updated successfully!")
+
+        sha = None
+        if callable(get_file_sha):
+            sha = get_file_sha(MASTER_LIST_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+
+        save_master_list(df, repo=GITHUB_REPO, branch=GITHUB_BRANCH, sha=sha)
+
+        st.success("✅ Master list updated on GitHub!")
+
+        # Reload fresh from GitHub
+        if callable(load_master_list):
+            df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
+
         safe_rerun()
         return True
     except Exception as e:
@@ -148,16 +156,25 @@ def try_save_master_list(df: pd.DataFrame, sha=None):
         return False
 
 
-def try_save_history(df: pd.DataFrame, sha=None):
-    """
-    Save history.csv directly to GitHub via data_manager.save_history
-    """
+def try_save_history(df: pd.DataFrame):
     try:
         if not GITHUB_REPO or not GITHUB_TOKEN:
             st.error("GitHub repo or token not configured.")
             return False
-        save_history(df, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
-        st.success("✅ History updated successfully!")
+
+        # Always fetch latest sha before saving
+        sha = None
+        if callable(get_file_sha):
+            sha = get_file_sha(HISTORY_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+
+        save_history(df, repo=GITHUB_REPO, branch=GITHUB_BRANCH, sha=sha)
+
+        st.success("✅ History updated on GitHub!")
+        
+        # Reload fresh from GitHub to reflect instantly
+        if callable(load_history):
+            df = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
+        
         safe_rerun()
         return True
     except Exception as e:
