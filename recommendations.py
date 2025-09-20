@@ -27,7 +27,7 @@ def recommend(master_df: pd.DataFrame, history_df: pd.DataFrame, min_count: int 
     def compute_days(d):
         try:
             if pd.isna(d):
-                return None
+                return pd.NA
             dt = pd.to_datetime(d).date()
             return (today - dt).days
         except Exception:
@@ -35,8 +35,8 @@ def recommend(master_df: pd.DataFrame, history_df: pd.DataFrame, min_count: int 
     candidates["Days Ago"] = candidates["Last Eaten"].apply(compute_days)
 
     # filter out eaten in last 7 days
-    candidates = candidates[~candidates["Days Ago"].apply(lambda x: x is not None and x < 7)]
-
+    candidates = candidates[~candidates["Days Ago"].apply(lambda x: pd.notna(x) and x < 7)]
+    
     # avoid same item type as last saved day if possible
     last_item_type = None
     if history_df is not None and not history_df.empty and "Item Type" in history_df.columns:
@@ -82,7 +82,7 @@ def recommend(master_df: pd.DataFrame, history_df: pd.DataFrame, min_count: int 
     if len(picks) < min_count:
         extra_needed = min_count - len(picks)
         for _, row in candidates.iterrows():
-            if row in picks:
+            if any(row.equals(p) for p in picks):
                 continue
             picks.append(row)
             if len(picks) >= min_count:
