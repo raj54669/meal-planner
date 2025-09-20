@@ -252,31 +252,17 @@ def try_save_master(df, sha=None):
             st.error(f"Failed local save: {e}")
             return False
 
-def try_save_history(df: pd.DataFrame, history_sha=None):
+def try_save_history(df, sha=None):
     """
-    Attempt to save history via save_history helper; fallback to CSV.
+    Attempt to save history directly to GitHub.
     """
-    if save_history and GITHUB_REPO and GITHUB_TOKEN:
-        try:
-            r = save_history(df, GITHUB_REPO, GITHUB_TOKEN, branch=GITHUB_BRANCH, sha=history_sha)
-            if isinstance(r, tuple):
-                return bool(r[0])
-            return bool(r)
-        except TypeError:
-            try:
-                return bool(save_history(df, GITHUB_REPO, GITHUB_TOKEN))
-            except Exception:
-                pass
-        except Exception:
-            pass
-
     try:
-        df.to_csv(HISTORY_CSV, index=False)
+        repo = gh.get_repo(GITHUB_REPO)
+        save_history(df, repo=repo, branch=GITHUB_BRANCH)
         return True
-    except Exception:
-        st.error("Failed to persist history (GitHub + local both failed).")
+    except Exception as e:
+        st.error(f"GitHub save failed: {e}")
         return False
-
 
 # -----------------------
 # Load data
