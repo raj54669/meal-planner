@@ -47,7 +47,7 @@ def recommend(master_df: pd.DataFrame, history_df: pd.DataFrame, min_count: int 
     # scoring: larger Days Ago => higher priority; None treated as -1 to push down (or up? treat None as very large to give priority)
     def score_row(r):
         da = r["Days Ago"]
-        if da is None:
+        if pd.isna(da):
             # never eaten: give a high score
             return 9999 + random.random()
         return float(da) + random.random() * 0.01
