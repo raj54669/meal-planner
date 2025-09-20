@@ -407,11 +407,11 @@ with tab2:  # Master List
 with tab3:  # History
     st.header("History")
     st.write("Use the static filter buttons below to view historical picks.")
-
-    col1, col2, col3, col4 = st.columns([2, 2, 2, 6])
-    btn_curr_month = col2.button("Current Month")
-    btn_prev_month = col3.button("Previous Month")
-
+    
+    center = st.columns([2])  
+    btn_curr_month = center[1].button("Current Month")
+    btn_prev_month = center[2].button("Previous Month")
+    
     filtered = history_df.copy()
 
     if not filtered.empty and "Date" in filtered.columns:
