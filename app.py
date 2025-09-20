@@ -172,14 +172,12 @@ master_df, history_df, master_sha, history_sha = load_data()
 
 # -----------------------
 # Top-level Title (visible on every page)
+
 # -----------------------
 st.title("🍴 NextBite – Meal Planner App")
 
-# -----------------------
-# Sidebar navigation (keep core workflow)
-# -----------------------
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Pick Today’s Recipe", "Master List", "History"])
+# Replace sidebar with tabs
+tab1, tab2, tab3 = st.tabs(["Pick Today’s Recipe", "Master List", "History"])
 
 # Utility: today's pick
 today = date.today()
@@ -195,7 +193,7 @@ if not history_df.empty and "Date" in history_df.columns:
 # -----------------------
 # PICK TODAY (unchanged primary flow)
 # -----------------------
-if page == "Pick Today’s Recipe":
+with tab1:  # Pick Today’s Recipe
     st.header("Pick Today’s Recipe")
     if today_pick:
         st.success(f"✅ Today's pick is **{today_pick}** (saved earlier).")
@@ -283,7 +281,7 @@ if page == "Pick Today’s Recipe":
 # -----------------------
 # MASTER LIST (restore Edit & Delete buttons)
 # -----------------------
-elif page == "Master List":
+with tab2:  # Master List
     st.header("Master List")
     st.write("Add / Edit / Delete recipes. Edit opens inline editor for the selected row.")
 
@@ -406,7 +404,7 @@ elif page == "Master List":
 # -----------------------
 # HISTORY (Item Type shown; sorted oldest → newest)
 # -----------------------
-elif page == "History":
+with tab3:  # History
     st.header("History")
     st.write("Use the static filter buttons below to view historical picks.")
 
