@@ -5,69 +5,110 @@ import hashlib
 import os
 
 # ---------- Load Master ----------
-def load_master_list(repo=None, branch="main", use_github=False):
+def load_master_list(repo, branch="main", use_github=True):
+    """
+    Load master_list.csv from GitHub.
+    Always returns DataFrame with columns [Recipe, Item Type].
+    """
     try:
-        if use_github:
-            file = repo.get_contents("master_list.csv", ref=branch)
-            return pd.read_csv(StringIO(file.decoded_content.decode()))
-        else:
-            return pd.read_csv("master_list.csv")
-    except Exception:
-        return pd.DataFrame(columns=["Recipe", "Item Type"])
+        file = repo.get_contents("master_list.csv", ref=branch)
+        df = pd.read_csv(StringIO(file.decoded_content.decode()))
+        if "Recipe" not in df.columns:
+            df["Recipe"] = None
+        if "Item Type" not in df.columns:
+            df["Item Type"] = None
+        return df
+    except Exception as e:
+        raise FileNotFoundError(f"Failed to load master_list.csv: {e}")
 
 # ---------- Load History ----------
-def load_history(repo=None, branch="main", use_github=False):
+def load_history(repo, branch="main", use_github=True):
+    """
+    Load history.csv from GitHub.
+    Always returns DataFrame with columns [Date, Recipe, Item Type].
+    """
     try:
-        if use_github:
-            file = repo.get_contents("history.csv", ref=branch)
-            return pd.read_csv(StringIO(file.decoded_content.decode()))
-        else:
-            return pd.read_csv("history.csv")
-    except Exception:
-        return pd.DataFrame(columns=["Date", "Recipe"])
+        file = repo.get_contents("history.csv", ref=branch)
+        df = pd.read_csv(StringIO(file.decoded_content.decode()))
+        if "Date" not in df.columns:
+            df["Date"] = None
+        if "Recipe" not in df.columns:
+            df["Recipe"] = None
+        if "Item Type" not in df.columns:
+            df["Item Type"] = None
+        return df
+    except Exception as e:
+        raise FileNotFoundError(f"Failed to load history.csv: {e}")
 
 # ---------- Save Today’s Pick ----------
-def save_today_pick(recipe, repo=None, branch="main", use_github=False):
+def save_today_pick(recipe, repo, branch="main", use_github=True):
+    """
+    Append today's pick (Date, Recipe, Item Type) to history.csv in GitHub.
+    """
     today = datetime.today().strftime("%d-%m-%Y")
-    new_row = pd.DataFrame([{"Date": today, "Recipe": recipe}])
 
-    history = load_history(repo, branch, use_github)
+    # Lookup Item Type from master
+    master = load_master_list(repo, branch, use_github=True)
+    item_type = master.loc[master["Recipe"] == recipe, "Item Type"].values
+    item_type = item_type[0] if len(item_type) > 0 else None
+
+    new_row = pd.DataFrame([{"Date": today, "Recipe": recipe, "Item Type": item_type}])
+
+    history = load_history(repo, branch, use_github=True)
     updated = pd.concat([history, new_row], ignore_index=True)
 
-    if use_github:
-        file = repo.get_contents("history.csv", ref=branch)
-        repo.update_file(file.path, f"Update history {today}", updated.to_csv(index=False), file.sha, branch=branch)
-    else:
-        updated.to_csv("history.csv", index=False)
+    file = repo.get_contents("history.csv", ref=branch)  # ❌ will raise if not found
+    repo.update_file(
+        file.path,
+        f"Update history {today}",
+        updated.to_csv(index=False),
+        file.sha,
+        branch=branch
+    )
 
 # ---------- Add to Master ----------
-def add_recipe_to_master(recipe, item_type, repo=None, branch="main", use_github=False):
+def add_recipe_to_master(recipe, item_type, repo, branch="main", use_github=True):
+    """
+    Add a recipe to master_list.csv in GitHub.
+    """
     new_row = pd.DataFrame([{"Recipe": recipe, "Item Type": item_type}])
 
-    master = load_master_list(repo, branch, use_github)
+    master = load_master_list(repo, branch, use_github=True)
     updated = pd.concat([master, new_row], ignore_index=True)
 
-    if use_github:
-        file = repo.get_contents("master_list.csv", ref=branch)
-        repo.update_file(file.path, "Add recipe", updated.to_csv(index=False), file.sha, branch=branch)
-    else:
-        updated.to_csv("master_list.csv", index=False)
+    file = repo.get_contents("master_list.csv", ref=branch)  # ❌ will raise if not found
+    repo.update_file(
+        file.path,
+        "Add recipe",
+        updated.to_csv(index=False),
+        file.sha,
+        branch=branch
+    )
 
 # ---------- Delete Today ----------
-def delete_today_pick(repo=None, branch="main", use_github=False):
+def delete_today_pick(repo, branch="main", use_github=True):
+    """
+    Delete today's pick from history.csv in GitHub.
+    """
     today = datetime.today().strftime("%d-%m-%Y")
-    history = load_history(repo, branch, use_github)
+    history = load_history(repo, branch, use_github=True)
     updated = history[history["Date"] != today]
 
-    if use_github:
-        file = repo.get_contents("history.csv", ref=branch)
-        repo.update_file(file.path, f"Delete today {today}", updated.to_csv(index=False), file.sha, branch=branch)
-    else:
-        updated.to_csv("history.csv", index=False)
+    file = repo.get_contents("history.csv", ref=branch)  # ❌ will raise if not found
+    repo.update_file(
+        file.path,
+        f"Delete today {today}",
+        updated.to_csv(index=False),
+        file.sha,
+        branch=branch
+    )
 
 # ---------- Utility: Get File SHA ----------
 def get_file_sha(filepath: str) -> str:
-    """Return SHA1 hash of a file for change tracking, or None if file doesn't exist."""
+    """
+    Return SHA1 hash of a local file for change tracking,
+    or None if file doesn't exist.
+    """
     if not os.path.exists(filepath):
         return None
     sha1 = hashlib.sha1()
