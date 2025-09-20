@@ -67,7 +67,6 @@ def display_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = 
         .custom-table th, .custom-table td {
             border: 1px solid #eee;
             padding: 6px 8px;
-            text-align: center;
         }
         .custom-table th {
             background: #fafafa;
@@ -81,7 +80,10 @@ def display_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = 
         .custom-table th.days-col {
             min-width: 80px;
             text-align: center;
-            font-weight: bold;
+            font-weight: normal;   /* remove bold */
+        }
+        .custom-table th.days-col {
+            text-align: center;    /* center header text */
         }
     </style>
     """
