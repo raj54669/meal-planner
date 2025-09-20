@@ -276,9 +276,9 @@ elif page == "Master List":
     st.header("Master List")
     st.write("Add / Edit / Delete recipes.")
 
-    if callable(load_master_list):
-        master_df = load_master_list()
-        master_sha = get_file_sha(MASTER_LIST_FILE)
+    if callable(load_master_list) and GITHUB_REPO:
+        master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
+        master_sha = get_file_sha(MASTER_LIST_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
     else:
         master_df = pd.DataFrame(columns=["Recipe", "Item Type"])
 
