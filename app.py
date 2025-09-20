@@ -154,7 +154,7 @@ def load_data():
             history_df[c] = pd.NA
 
     if "Date" in history_df.columns:
-        history_df["Date"] = pd.to_datetime(history_df["Date"], errors="coerce")
+        history_df["Date"] = history_df["Date"].fillna(datetime.today().strftime("%d-%m-%Y"))
 
     return master_df, history_df, master_sha, history_sha
 
