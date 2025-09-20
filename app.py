@@ -1,16 +1,15 @@
 # app.py
 import streamlit as st
 import pandas as pd
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta
 import os
 from github import Github
-from ui_widgets import display_table
+from ui_widgets import display_table   # ✅ use central table formatter
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO_NAME = os.getenv("GITHUB_REPO", "raj54669/meal-planner")
 GITHUB_BRANCH = "main"
 
-gh = None
 GITHUB_REPO = None
 if GITHUB_TOKEN:
     try:
@@ -49,7 +48,7 @@ except Exception:
     recommend = None
 
 # -----------------------
-# Config / Secrets (defensive)
+# Config / Secrets
 # -----------------------
 try:
     GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", GITHUB_TOKEN)
@@ -69,16 +68,6 @@ except Exception:
 
 # Page config
 st.set_page_config(page_title="NextBite – Meal Planner App", page_icon="🍴", layout="centered")
-
-st.markdown(
-    """
-    <style>
-    .app-container > .main > .block-container { padding-top: 0rem; }
-    header {visibility: hidden;}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
 
 # -----------------------
 # Helpers
@@ -123,7 +112,6 @@ def load_data():
 
     return master_df, history_df, master_sha, history_sha
 
-
 def try_save_master_list(df: pd.DataFrame):
     try:
         if not GITHUB_REPO or not GITHUB_TOKEN:
@@ -137,17 +125,14 @@ def try_save_master_list(df: pd.DataFrame):
         save_master_list(df, repo=GITHUB_REPO, branch=GITHUB_BRANCH, sha=sha)
 
         st.success("✅ Master list updated on GitHub!")
-
         st.cache_data.clear()
         if callable(load_master_list):
             df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
-
         safe_rerun()
         return True
     except Exception as e:
         st.error(f"❌ GitHub save failed: {type(e).__name__} - {e}")
         return False
-
 
 def try_save_history(df: pd.DataFrame):
     try:
@@ -162,17 +147,14 @@ def try_save_history(df: pd.DataFrame):
         save_history(df, repo=GITHUB_REPO, branch=GITHUB_BRANCH, sha=sha)
 
         st.success("✅ History updated on GitHub!")
-
         st.cache_data.clear()
         if callable(load_history):
             df = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
-
         safe_rerun()
         return True
     except Exception as e:
         st.error(f"❌ GitHub save failed: {type(e).__name__} - {e}")
         return False
-
 
 # -----------------------
 # Load data
@@ -184,8 +166,9 @@ master_df, history_df, master_sha, history_sha = load_data()
 # -----------------------
 st.title("🍴 NextBite – Meal Planner App")
 
-# Replace sidebar with tabs
-tab1, tab2, tab3 = st.tabs(["Pick Today’s Recipe", "Master List", "History"])
+# Sidebar nav
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Pick Today’s Recipe", "Master List", "History"])
 
 # Utility: today's pick
 today = date.today()
@@ -201,7 +184,7 @@ if not history_df.empty and "Date" in history_df.columns:
 # -----------------------
 # PICK TODAY
 # -----------------------
-with tab1:
+if page == "Pick Today’s Recipe":
     st.header("Pick Today’s Recipe")
     if today_pick:
         st.success(f"✅ Today's pick is **{today_pick}** (saved earlier).")
@@ -229,6 +212,7 @@ with tab1:
                 filtered["Days Ago"] = filtered["Last Eaten"].apply(lambda d: (today - pd.to_datetime(d).date()).days if pd.notna(d) else pd.NA)
                 filtered = filtered.sort_values(by="Days Ago", ascending=False)
 
+                # ✅ use shared table UI
                 display_table(filtered[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
 
                 choices = filtered["Recipe"].astype(str).tolist()
@@ -257,28 +241,30 @@ with tab1:
             if "Days Ago" in rec_df.columns:
                 rec_df["Days Ago"] = rec_df["Days Ago"].apply(lambda x: int(x) if pd.notna(x) else pd.NA)
 
+            # ✅ use shared table UI
             display_table(rec_df[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
 
             choices = rec_df["Recipe"].astype(str).tolist()
             if choices:
                 recipe_choice = st.radio("Select recipe to save for today", choices, key="suggest_choice")
                 if st.button("Save Today's Pick (Suggestion)"):
+
                     chosen_row = rec_df[rec_df["Recipe"] == recipe_choice].iloc[0].to_dict()
                     item_type = chosen_row.get("Item Type", "")
                     new_row = {"Date": today.strftime("%Y-%m-%d"), "Recipe": recipe_choice, "Item Type": item_type}
                     new_history = pd.concat([history_df, pd.DataFrame([new_row])], ignore_index=True)
-                    try:
-                        history_df = save_history(new_history, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
-                        st.cache_data.clear()
-                        st.success(f"Saved **{recipe_choice}** to history (GitHub updated).")
+
+                    ok = try_save_history(new_history)
+                    if ok:
+                        st.success(f"Saved **{recipe_choice}** to history.")
                         safe_rerun()
-                    except Exception as e:
-                        st.error(f"Failed to save history: {e}")
+                    else:
+                        st.error("Failed to save history. Check logs.")
 
 # -----------------------
 # MASTER LIST
 # -----------------------
-with tab2:
+elif page == "Master List":
     st.header("Master List")
     st.write("Add / Edit / Delete recipes. Edit opens inline editor for the selected row.")
 
@@ -385,34 +371,19 @@ with tab2:
 # -----------------------
 # HISTORY
 # -----------------------
-with tab3:
+elif page == "History":
     st.header("History")
     st.write("Use the static filter buttons below to view historical picks.")
 
-    st.markdown(
-        "<style>div.stButton > button { white-space: nowrap; }</style>",
-        unsafe_allow_html=True,
-    )
-
-    if callable(load_history) and GITHUB_REPO:
-        try:
-            history_df = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
-            history_sha = get_file_sha(HISTORY_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
-        except Exception:
-            history_df = pd.DataFrame()
-            history_sha = None
-
-    col_left, col_mid, col_right = st.columns([1, 2, 1])
-    with col_mid:
-        b1, b2 = st.columns([1, 1])
-        btn_curr_month = b1.button("Current Month", key="history_curr_month")
-        btn_prev_month = b2.button("Previous Month", key="history_prev_month")
+    col1, col2, col3, col4 = st.columns(4)
+    btn_prev_month = col1.button("Previous Month")
+    btn_curr_month = col2.button("Current Month")
+    btn_prev_week = col3.button("Previous Week")
+    btn_curr_week = col4.button("Current Week")
 
     filtered = history_df.copy()
 
     if not filtered.empty and "Date" in filtered.columns:
-        filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce")
-
         master_map = dict(zip(master_df["Recipe"].astype(str), master_df["Item Type"].astype(str)))
         filtered["Item Type"] = filtered["Item Type"].fillna(filtered["Recipe"].map(master_map))
 
@@ -422,14 +393,20 @@ with tab3:
             last_of_prev = first_of_this - timedelta(days=1)
             first_of_prev = last_of_prev.replace(day=1)
             filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
-        else:
+        elif btn_curr_month:
             first = today_local.replace(day=1)
             filtered = filtered[(filtered["Date"].dt.date >= first) & (filtered["Date"].dt.date <= today_local)]
+        elif btn_prev_week:
+            start_this_week = today_local - timedelta(days=today_local.weekday())
+            prev_start = start_this_week - timedelta(days=7)
+            prev_end = start_this_week - timedelta(days=1)
+            filtered = filtered[(filtered["Date"].dt.date >= prev_start) & (filtered["Date"].dt.date <= prev_end)]
+        elif btn_curr_week:
+            start_this_week = today_local - timedelta(days=today_local.weekday())
+            filtered = filtered[(filtered["Date"].dt.date >= start_this_week) & (filtered["Date"].dt.date <= today_local)]
 
         filtered = filtered.copy()
-        filtered["Days Ago"] = filtered["Date"].apply(
-            lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA
-        )
+        filtered["Days Ago"] = filtered["Date"].apply(lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA)
         filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
 
         try:
@@ -438,16 +415,19 @@ with tab3:
         except Exception:
             filtered = filtered.sort_index(ascending=True)
 
+        # ✅ use shared table UI
         display_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
 
         if st.button("Remove Today's Entry (if exists)"):
             try:
-                today_str = date.today().strftime("%Y-%m-%d")
-                history_df = delete_today_pick(today_str, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
-                st.cache_data.clear()
-                st.success("Removed today's entry from GitHub.")
-                safe_rerun()
-            except Exception as e:
-                st.error(f"Unable to remove today's entry: {e}")
+                new_hist = history_df[history_df["Date"].dt.date != date.today()].reset_index(drop=True)
+                ok = try_save_history(new_hist)
+                if ok:
+                    st.success("Removed today's entry.")
+                    safe_rerun()
+                else:
+                    st.error("Failed to update history. Check logs.")
+            except Exception:
+                st.error("Unable to remove today's entry. Check history data format.")
     else:
         st.info("History is empty.")
