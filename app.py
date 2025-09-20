@@ -335,51 +335,51 @@ elif page == "Master List":
     else:
         st.info("No recipes found.")
 
-# -----------------------
+# -------------------
 # HISTORY
-# -----------------------
+# -------------------
 elif page == "History":
     st.header("History")
-    st.write("Use the filter buttons below.")
 
-    col1, col2, col3, col4 = st.columns(4)
-    btn_prev_month = col1.button("Previous Month")
-    btn_curr_month = col2.button("Current Month")
-    btn_prev_week = col3.button("Previous Week")
-    btn_curr_week = col4.button("Current Week")
-
+    today = date.today()
     filtered = history_df.copy()
 
-    if not filtered.empty and "Date" in filtered.columns:
-        master_map = dict(zip(master_df["Recipe"].astype(str), master_df["Item Type"].astype(str)))
-        filtered["Item Type"] = filtered["Item Type"].fillna(filtered["Recipe"].map(master_map))
-        today_local = date.today()
-        if btn_prev_month:
-            first_of_this = today_local.replace(day=1)
-            last_of_prev = first_of_this - timedelta(days=1)
-            first_of_prev = last_of_prev.replace(day=1)
-            filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
-        elif btn_curr_month:
-            first = today_local.replace(day=1)
-            filtered = filtered[(filtered["Date"].dt.date >= first) & (filtered["Date"].dt.date <= today_local)]
-        elif btn_prev_week:
-            start_this_week = today_local - timedelta(days=today_local.weekday())
-            prev_start = start_this_week - timedelta(days=7)
-            prev_end = start_this_week - timedelta(days=1)
-            filtered = filtered[(filtered["Date"].dt.date >= prev_start) & (filtered["Date"].dt.date <= prev_end)]
-        elif btn_curr_week:
-            start_this_week = today_local - timedelta(days=today_local.weekday())
-            filtered = filtered[(filtered["Date"].dt.date >= start_this_week) & (filtered["Date"].dt.date <= today_local)]
-        filtered["Days Ago"] = filtered["Date"].apply(lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA)
-        filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
-        try:
-            filtered["__sort_date__"] = pd.to_datetime(filtered["Date"], format="%d-%m-%Y", errors="coerce")
-            filtered = filtered.sort_values("__sort_date__", ascending=True).drop(columns="__sort_date__")
-        except Exception:
-            filtered = filtered.sort_index(ascending=True)
-        st.markdown(df_to_html_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]]), unsafe_allow_html=True)
-        if st.button("Remove Today's Entry (if exists)"):
-            new_hist = history_df[history_df["Date"].dt.date != date.today()].reset_index(drop=True)
-            try_save_history(new_hist, history_sha)
-    else:
-        st.info("History is empty.")
+    # Ensure Date column is datetime.date objects
+    filtered["Date"] = pd.to_datetime(filtered["Date"], format="%d-%m-%Y", errors="coerce").dt.date
+
+    # Filter options
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        btn_curr_week = st.button("This Week")
+    with col2:
+        btn_last_week = st.button("Last Week")
+    with col3:
+        btn_custom_range = st.button("Custom Range")
+
+    if btn_curr_week:
+        start_this_week = today - timedelta(days=today.weekday())
+        end_this_week = start_this_week + timedelta(days=6)
+        filtered = filtered[(filtered["Date"] >= start_this_week) & (filtered["Date"] <= end_this_week)]
+
+    elif btn_last_week:
+        start_last_week = today - timedelta(days=today.weekday() + 7)
+        end_last_week = start_last_week + timedelta(days=6)
+        filtered = filtered[(filtered["Date"] >= start_last_week) & (filtered["Date"] <= end_last_week)]
+
+    elif btn_custom_range:
+        start_date = st.date_input("Start Date", today - timedelta(days=30))
+        end_date = st.date_input("End Date", today)
+        filtered = filtered[(filtered["Date"] >= start_date) & (filtered["Date"] <= end_date)]
+
+    # Add "Days Ago" column safely
+    filtered["Days Ago"] = filtered["Date"].apply(
+        lambda d: (today - d).days if pd.notna(d) else None
+    )
+
+    # Sort and show table
+    try:
+        filtered = filtered.sort_values(by="Date", ascending=False)
+    except Exception as e:
+        st.error(f"Sorting error: {e}")
+
+    st.dataframe(filtered, use_container_width=True)
