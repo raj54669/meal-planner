@@ -408,25 +408,21 @@ with tab3:  # History
     st.header("History")
     st.write("Use the static filter buttons below to view historical picks.")
     
-    # Prevent button text from wrapping
+    # Add a small CSS rule so the button text never wraps
     st.markdown(
-        """
-        <style>
-        div.stButton > button {
-            white-space: nowrap;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
+        "<style>div.stButton > button { white-space: nowrap; }</style>",
+        unsafe_allow_html=True,
     )
     
-    # Create 5 columns to center buttons inline
-    col1, col2, col3, col4, col5 = st.columns([3, 2, 2, 2, 3])
+    # Use three columns and place the buttons inside the middle column.
+    # This centers the button group. Adjust the ratios if you want different spacing.
+    col_left, col_mid, col_right = st.columns([1, 2, 1])
     
-    with col2:
-        btn_curr_month = st.button("Current Month")
-    with col3:
-        btn_prev_month = st.button("Previous Month")
+    with col_mid:
+        # nested two equal columns ensure the buttons are inline and adjacent
+        b1, b2 = st.columns([1, 1])
+        btn_curr_month = b1.button("Current Month", key="history_curr_month")
+        btn_prev_month = b2.button("Previous Month", key="history_prev_month")
     
     filtered = history_df.copy()
 
