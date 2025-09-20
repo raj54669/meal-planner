@@ -1,9 +1,13 @@
 import streamlit as st
 import pandas as pd
 
-
 def df_to_html_table(df: pd.DataFrame):
     df = df.copy()
+
+    # ✅ Fix date formatting
+    for col in df.columns:
+        if pd.api.types.is_datetime64_any_dtype(df[col]):
+            df[col] = df[col].dt.strftime("%d-%m-%Y")
 
     css = """
     <style>
@@ -16,12 +20,12 @@ def df_to_html_table(df: pd.DataFrame):
         .blue-table th, .blue-table td {
             border: 1px solid #000;
             padding: 8px;
-            text-align: center; /* center align everything */
+            text-align: center; /* Center alignment */
         }
         .blue-table th {
-            background-color: #004080; /* dark blue header */
+            background-color: #004080; /* Dark blue */
             color: white;
-            font-weight: bold;
+            font-weight: 700; /* Force bold */
         }
         .blue-table td {
             font-weight: normal;
@@ -42,6 +46,6 @@ def df_to_html_table(df: pd.DataFrame):
 
 
 def display_table(df: pd.DataFrame):
-    """Render a styled blue-themed table in Streamlit."""
+    """Render styled table in Streamlit."""
     html = df_to_html_table(df)
     st.markdown(html, unsafe_allow_html=True)
