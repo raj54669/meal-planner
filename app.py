@@ -71,18 +71,10 @@ except Exception:
 # Page config
 st.set_page_config(page_title="NextBite – Meal Planner App", page_icon="🍴", layout="centered")
 
-# CSS (unchanged)
 st.markdown(
     """
     <style>
     .app-container > .main > .block-container { padding-top: 1rem !important; }
-    .nb-table { border-collapse: collapse; width: 100%; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-    .nb-table th, .nb-table td { padding: 10px 12px; border: 1px solid #eee; }
-    .nb-table thead th { background: #fafafa; text-align: left; font-weight: 600; }
-    .nb-table td.center { text-align: center; }
-    .nb-table td.right { text-align: right; }
-    .nb-table td.daysago { text-align: center; width: 60px; white-space: nowrap; }
-    .nb-table-wrap { width:100%; overflow-x:auto; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -99,44 +91,6 @@ def safe_rerun():
             st.rerun()
         except Exception:
             return
-
-
-def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = "Last Eaten"):
-    df = df.copy()
-
-    # Format Last Eaten
-    if last_col in df.columns:
-        df[last_col] = pd.to_datetime(df[last_col], errors="coerce")
-        df[last_col] = df[last_col].dt.strftime("%d-%m-%Y")
-        df[last_col] = df[last_col].fillna("")
-
-    # Format Days Ago: int, or '-'
-    if days_col in df.columns:
-        def fmt_days(x):
-            if pd.isna(x) or x == "" or x is None:
-                return "-"
-            try:
-                return str(int(float(x)))
-            except Exception:
-                return str(x)
-        df[days_col] = df[days_col].apply(fmt_days)
-
-    cols = list(df.columns)
-    thead_cells = "".join(f"<th>{c}</th>" for c in cols)
-    tbody_rows = ""
-    for _, r in df.iterrows():
-        row_cells = ""
-        for c in cols:
-            v = r[c] if pd.notna(r[c]) else ""
-            v = "" if v is None else v
-            if c == days_col:
-                row_cells += f"<td class='daysago'>{v}</td>"
-            else:
-                row_cells += f"<td>{v}</td>"
-        tbody_rows += f"<tr>{row_cells}</tr>"
-    full_html = f"<div class='nb-table-wrap'><table class='nb-table'><thead><tr>{thead_cells}</tr></thead><tbody>{tbody_rows}</tbody></table></div>"
-    return full_html
-
 
 def load_data():
     """
