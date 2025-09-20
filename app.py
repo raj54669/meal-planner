@@ -327,7 +327,7 @@ with tab2:  # Master List
                     [master_df, pd.DataFrame([{"Recipe": new_name.strip(), "Item Type": new_type.strip()}])],
                     ignore_index=True
                 )
-                ok = try_save_master_list(new_master, master_sha)
+                ok = try_save_master_list(new_master)
                 if ok:
                     st.success(f"Added **{new_name}** to master list.")
                     # 🔥 Reload both DataFrame and SHA
@@ -403,7 +403,7 @@ with tab2:  # Master List
                 st.warning(f"Confirm delete '{row['Recipe']}'?")
                 if st.button("Confirm Delete", key=f"confirm_del_{i}"):
                     new_master = master_df.drop(i).reset_index(drop=True)
-                    ok = try_save_master_list(new_master, master_sha)
+                    ok = try_save_master_list(new_master)
                     if ok:
                         st.success("Deleted entry.")
                         st.session_state["delete_row"] = None
@@ -489,7 +489,7 @@ with tab3:  # History
         if st.button("Remove Today's Entry (if exists)"):
             try:
                 new_hist = history_df[history_df["Date"].dt.date != date.today()].reset_index(drop=True)
-                ok = try_save_history(new_hist, history_sha)
+                ok = try_save_history(new_hist)
                 if ok:
                     st.success("Removed today's entry.")
                     safe_rerun()
