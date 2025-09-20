@@ -408,9 +408,9 @@ with tab3:  # History
     st.header("History")
     st.write("Use the static filter buttons below to view historical picks.")
 
-    col1, col2 = st.columns(2)
-    btn_curr_month = col1.button("Current Month")
-    btn_prev_month = col2.button("Previous Month")
+    center = st.columns([2,1,1,2])  
+    btn_curr_month = center[1].button("Current Month")
+    btn_prev_month = center[2].button("Previous Month")
 
     filtered = history_df.copy()
 
