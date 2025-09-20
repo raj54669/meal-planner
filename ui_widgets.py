@@ -1,49 +1,46 @@
-# ui_widgets.py
-def display_table(df):
-    """Custom table display with formatting & compact widths"""
-    import streamlit as st
+# ui_widget.py
+import streamlit as st
+import pandas as pd
 
-    if df.empty:
-        st.info("No data available.")
-        return
 
-    # Convert to HTML
-    df_html = df.to_html(index=False, classes="custom-table", escape=False)
+def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = "Last Eaten"):
+    df = df.copy()
 
-    # If Days Ago column exists → add CSS class
-    if "Days Ago" in df.columns:
-        df_html = df_html.replace(
-            '<th>Days Ago</th>', '<th class="days-col">Days Ago</th>'
-        ).replace(
-            '<td>', '<td style="text-align:center;">'
-        )
+    # Format Last Eaten
+    if last_col in df.columns:
+        df[last_col] = pd.to_datetime(df[last_col], errors="coerce")
+        df[last_col] = df[last_col].dt.strftime("%d-%m-%Y")
+        df[last_col] = df[last_col].fillna("")
 
-    # Inject CSS
-    st.markdown(
-        """
-        <style>
-        .custom-table th {
-            text-align: center;
-            padding: 6px;
-        }
-        .custom-table td {
-            text-align: center;
-            padding: 6px;
-        }
-        /* Column widths */
-        .custom-table th:nth-child(1), .custom-table td:nth-child(1) { width: 30%; }  /* Recipe */
-        .custom-table th:nth-child(2), .custom-table td:nth-child(2) { width: 20%; }  /* Item Type */
-        .custom-table th:nth-child(3), .custom-table td:nth-child(3) { width: 25%; }  /* Last Eaten or Date */
-        .custom-table th:nth-child(4), .custom-table td:nth-child(4) { width: 25%; }  /* Days Ago */
-        
-        /* Special Days Ago column styling */
-        .custom-table th.days-col {
-            text-align: center;
-            white-space: nowrap;  /* keep "Days Ago" in one line */
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    # Format Days Ago: int, or '-'
+    if days_col in df.columns:
+        def fmt_days(x):
+            if pd.isna(x) or x == "" or x is None:
+                return "-"
+            try:
+                return str(int(float(x)))
+            except Exception:
+                return str(x)
+        df[days_col] = df[days_col].apply(fmt_days)
 
-    st.markdown(df_html, unsafe_allow_html=True)
+    cols = list(df.columns)
+    thead_cells = "".join(f"<th>{c}</th>" for c in cols)
+    tbody_rows = ""
+    for _, r in df.iterrows():
+        row_cells = ""
+        for c in cols:
+            v = r[c] if pd.notna(r[c]) else ""
+            v = "" if v is None else v
+            if c == days_col:
+                row_cells += f"<td class='daysago'>{v}</td>"
+            else:
+                row_cells += f"<td>{v}</td>"
+        tbody_rows += f"<tr>{row_cells}</tr>"
+    full_html = f"<div class='nb-table-wrap'><table class='nb-table'><thead><tr>{thead_cells}</tr></thead><tbody>{tbody_rows}</tbody></table></div>"
+    return full_html
+
+
+def display_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = "Last Eaten"):
+    """Wrapper to show styled HTML tables in Streamlit."""
+    html = df_to_html_table(df, days_col=days_col, last_col=last_col)
+    st.markdown(html, unsafe_allow_html=True)
