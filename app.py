@@ -265,7 +265,7 @@ with tab1:  # Pick Today’s Recipe
                             st.dataframe(history_df)
                     
                         except Exception as e:
-        st.error(f"Failed to save history: {e}")
+                            st.error(f"Failed to save history: {e}")
 
     else:
         # Today's Suggestions
