@@ -408,9 +408,25 @@ with tab3:  # History
     st.header("History")
     st.write("Use the static filter buttons below to view historical picks.")
     
-    center = st.columns([2])  
-    btn_curr_month = center[1].button("Current Month")
-    btn_prev_month = center[2].button("Previous Month")
+    # Prevent button text from wrapping
+    st.markdown(
+        """
+        <style>
+        div.stButton > button {
+            white-space: nowrap;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    # Create 5 columns to center buttons inline
+    col1, col2, col3, col4, col5 = st.columns([3, 2, 2, 2, 3])
+    
+    with col2:
+        btn_curr_month = st.button("Current Month")
+    with col3:
+        btn_prev_month = st.button("Previous Month")
     
     filtered = history_df.copy()
 
