@@ -4,7 +4,7 @@ import pandas as pd
 def df_to_html_table(df: pd.DataFrame):
     df = df.copy()
 
-    # ✅ Fix date formatting
+    # ✅ Fix date formatting (DD-MM-YYYY)
     for col in df.columns:
         if pd.api.types.is_datetime64_any_dtype(df[col]):
             df[col] = df[col].dt.strftime("%d-%m-%Y")
@@ -24,11 +24,11 @@ def df_to_html_table(df: pd.DataFrame):
         }
         .blue-table th {
             background-color: #004080; /* Dark blue */
-            color: white;
-            font-weight: 700; /* Force bold */
+            color: white !important;
+            font-weight: 900 !important; /* Force bold */
         }
         .blue-table td {
-            font-weight: normal;
+            font-weight: normal !important;
         }
     </style>
     """
