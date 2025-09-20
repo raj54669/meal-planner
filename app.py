@@ -267,7 +267,9 @@ if page == "Pick Today’s Recipe":
 
                 filtered["Last Eaten"] = filtered["Recipe"].map(lambda r: last_dates.get(r) if r in last_dates else pd.NaT)
                 filtered["Days Ago"] = filtered["Last Eaten"].apply(lambda d: (today - pd.to_datetime(d).date()).days if pd.notna(d) else pd.NA)
-
+                
+                filtered = filtered.sort_values(by="Days Ago", ascending=False)
+                
                 html = df_to_html_table(filtered[["Recipe", "Item Type", "Last Eaten", "Days Ago"]])
                 st.markdown(html, unsafe_allow_html=True)
 
