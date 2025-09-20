@@ -348,27 +348,6 @@ elif page == "Master List":
     else:
         st.info("No recipes found.")
 
-
-# -----------------------
-# HISTORY - By Item Type
-# -----------------------
-elif history_view == "By Item Type":
-    st.subheader("History by Item Type")
-    history_df = load_history(GITHUB_REPO, GITHUB_BRANCH)
-
-    if not history_df.empty:
-        # ✅ Sort by Item Type, then Recipe
-        history_df = history_df.sort_values(by=["Item Type", "Recipe"], ascending=[True, True]).reset_index(drop=True)
-
-        grouped = history_df.groupby("Item Type")
-        for itype, group in grouped:
-            st.markdown(f"### {itype}")
-            for _, row in group.iterrows():
-                st.write(f"- {row['Recipe']} ({row['Date']})")
-    else:
-        st.info("No history available.")
-
-
 # -------------------------------
 # HISTORY
 # -------------------------------
@@ -426,3 +405,4 @@ if history_df is not None and not history_df.empty:
         st.info("Select a button to view history.")
 else:
     st.info("No history available.")
+
