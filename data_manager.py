@@ -124,7 +124,7 @@ def delete_today_pick(date_str, repo=None, branch="main"):
 
 
 # ---------- Save Master List ----------
-def save_master_list(df, repo=None, branch="main"):
+def save_master_list(df, repo=None, branch="main", sha=None):
     """
     Save the master list DataFrame to GitHub (update or create).
     """
@@ -133,14 +133,16 @@ def save_master_list(df, repo=None, branch="main"):
 
     content = df.to_csv(index=False)
     try:
-        file = repo.get_contents("master_list.csv", ref=branch)
-        repo.update_file(file.path, "Update master list", content, file.sha, branch=branch)
+        if sha is None:
+            file = repo.get_contents("master_list.csv", ref=branch)
+            sha = file.sha
+        repo.update_file("master_list.csv", "Update master list", content, sha, branch=branch)
     except Exception:
         repo.create_file("master_list.csv", "Create master list", content, branch=branch)
 
 
 # ---------- Save History ----------
-def save_history(df, repo=None, branch="main"):
+def save_history(df, repo=None, branch="main", sha=None):
     """
     Save history DataFrame to GitHub (update or create).
     """
@@ -149,10 +151,13 @@ def save_history(df, repo=None, branch="main"):
 
     content = df.to_csv(index=False)
     try:
-        file = repo.get_contents("history.csv", ref=branch)
-        repo.update_file(file.path, "Update history", content, file.sha, branch=branch)
+        if sha is None:
+            file = repo.get_contents("history.csv", ref=branch)
+            sha = file.sha
+        repo.update_file("history.csv", "Update history", content, sha, branch=branch)
     except Exception:
         repo.create_file("history.csv", "Create history", content, branch=branch)
+
 
 
 # ---------- Utility: Get File SHA ----------
