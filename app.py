@@ -50,12 +50,12 @@ try:
 except Exception:
     recommend = None
 
-# --- Initialize Session State ---
-if "history_df" not in st.session_state:
-    st.session_state.history_df = dm.load_history()
+# --- Initialize Session State (load from GitHub) ---
+if "master_df" not in st.session_state or "history_df" not in st.session_state:
+    master_df, history_df, _, _ = load_data()
+    st.session_state.master_df = master_df
+    st.session_state.history_df = history_df
 
-if "master_df" not in st.session_state:
-    st.session_state.master_df = dm.load_master_list()
 
 # -----------------------
 # Config / Secrets
