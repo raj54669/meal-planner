@@ -3,6 +3,20 @@ from datetime import datetime
 from io import StringIO
 import hashlib
 import os
+import tempfile
+import shutil
+
+# ---------- Atomic Save ----------
+def atomic_save(df: pd.DataFrame, filepath: str):
+    """Safely save CSV without risk of corruption."""
+    tmp_fd, tmp_path = tempfile.mkstemp()
+    os.close(tmp_fd)
+    try:
+        df.to_csv(tmp_path, index=False)
+        shutil.move(tmp_path, filepath)
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 # ---------- Load Master ----------
 def load_master_list(repo=None, branch="main"):
@@ -32,13 +46,31 @@ def save_today_pick(recipe, item_type="", repo=None, branch="main"):
     new_row = pd.DataFrame([{"Date": today, "Recipe": recipe, "Item Type": item_type}])
 
     history = load_history(repo, branch)
+    # Drop any existing entry for today
+    history = history[history["Date"] != today]
     updated = pd.concat([history, new_row], ignore_index=True)
 
     if repo:
         file = repo.get_contents("history.csv", ref=branch)
         repo.update_file(file.path, f"Update history {today}", updated.to_csv(index=False), file.sha, branch=branch)
     else:
-        updated.to_csv("history.csv", index=False)
+        atomic_save(updated, "history.csv")
+
+    return updated
+
+# ---------- Delete Today ----------
+def delete_today_pick(today_str=None, repo=None, branch="main"):
+    if today_str is None:
+        today_str = datetime.today().strftime("%Y-%m-%d")
+
+    history = load_history(repo, branch)
+    updated = history[history["Date"] != today_str].reset_index(drop=True)
+
+    if repo:
+        file = repo.get_contents("history.csv", ref=branch)
+        repo.update_file(file.path, f"Delete today {today_str}", updated.to_csv(index=False), file.sha, branch=branch)
+    else:
+        atomic_save(updated, "history.csv")
 
     return updated
 
@@ -53,23 +85,37 @@ def add_recipe_to_master(recipe, item_type, repo=None, branch="main"):
         file = repo.get_contents("master_list.csv", ref=branch)
         repo.update_file(file.path, "Add recipe", updated.to_csv(index=False), file.sha, branch=branch)
     else:
-        updated.to_csv("master_list.csv", index=False)
+        atomic_save(updated, "master_list.csv")
 
     return updated
 
-# ---------- Delete Today ----------
-def delete_today_pick(today_str=None, repo=None, branch="main"):
-    if today_str is None:
-        today_str = datetime.today().strftime("%Y-%m-%d")
+# ---------- Edit Recipe in Master ----------
+def edit_recipe_in_master(old_recipe, new_recipe, new_item_type, repo=None, branch="main"):
+    master = load_master_list(repo, branch)
 
-    history = load_history(repo, branch)
-    updated = history[history["Date"] != today_str]
+    if old_recipe not in master["Recipe"].values:
+        return master  # nothing to edit
+
+    master.loc[master["Recipe"] == old_recipe, ["Recipe", "Item Type"]] = [new_recipe, new_item_type]
 
     if repo:
-        file = repo.get_contents("history.csv", ref=branch)
-        repo.update_file(file.path, f"Delete today {today_str}", updated.to_csv(index=False), file.sha, branch=branch)
+        file = repo.get_contents("master_list.csv", ref=branch)
+        repo.update_file(file.path, f"Edit recipe {old_recipe}", master.to_csv(index=False), file.sha, branch=branch)
     else:
-        updated.to_csv("history.csv", index=False)
+        atomic_save(master, "master_list.csv")
+
+    return master
+
+# ---------- Delete Recipe from Master ----------
+def delete_recipe_from_master(recipe, repo=None, branch="main"):
+    master = load_master_list(repo, branch)
+    updated = master[master["Recipe"] != recipe].reset_index(drop=True)
+
+    if repo:
+        file = repo.get_contents("master_list.csv", ref=branch)
+        repo.update_file(file.path, f"Delete recipe {recipe}", updated.to_csv(index=False), file.sha, branch=branch)
+    else:
+        atomic_save(updated, "master_list.csv")
 
     return updated
 
@@ -87,38 +133,6 @@ def get_file_sha(filepath: str, repo=None, branch="main"):
 
     if not os.path.exists(filepath):
         return None
-    sha1 = hashlib.sha1()
+
     with open(filepath, "rb") as f:
-        while chunk := f.read(8192):
-            sha1.update(chunk)
-    return sha1.hexdigest()
-
-# ---------- Save Master List ----------
-def save_master_list(df, repo=None, branch="main", sha=None):
-    if repo:
-        file = repo.get_contents("master_list.csv", ref=branch)
-        repo.update_file(
-            file.path,
-            "Update master list",
-            df.to_csv(index=False),
-            file.sha if sha is None else sha,
-            branch=branch
-        )
-    else:
-        df.to_csv("master_list.csv", index=False)
-    return df
-
-# ---------- Save History ----------
-def save_history(df, repo=None, branch="main", sha=None):
-    if repo:
-        file = repo.get_contents("history.csv", ref=branch)
-        repo.update_file(
-            file.path,
-            "Update history",
-            df.to_csv(index=False),
-            file.sha if sha is None else sha,
-            branch=branch
-        )
-    else:
-        df.to_csv("history.csv", index=False)
-    return df
+        return hashlib.sha1(f.read()).hexdigest()
