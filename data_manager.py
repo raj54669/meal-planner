@@ -22,22 +22,26 @@ def atomic_save(df: pd.DataFrame, filepath: str):
 def load_master_list(repo=None, branch="main"):
     try:
         if repo:
-            file = repo.get_contents("master_list.csv", ref=branch)
-            return pd.read_csv(StringIO(file.decoded_content.decode()))
+            file_content = repo.get_contents("master_list.csv", ref=branch)
+            df = pd.read_csv(io.StringIO(file_content.decoded_content.decode("utf-8")))
+            return df
         else:
             return pd.read_csv("master_list.csv")
-    except Exception:
+    except Exception as e:
+        st.error(f"❌ Failed to load master_list.csv: {e}")
         return pd.DataFrame(columns=["Recipe", "Item Type"])
-
+        
 # ---------- Load History ----------
 def load_history(repo=None, branch="main"):
     try:
         if repo:
-            file = repo.get_contents("history.csv", ref=branch)
-            return pd.read_csv(StringIO(file.decoded_content.decode()))
+            file_content = repo.get_contents("history.csv", ref=branch)
+            df = pd.read_csv(io.StringIO(file_content.decoded_content.decode("utf-8")))
+            return df
         else:
             return pd.read_csv("history.csv")
-    except Exception:
+    except Exception as e:
+        st.error(f"❌ Failed to load history.csv: {e}")
         return pd.DataFrame(columns=["Date", "Recipe", "Item Type"])
 
 # ---------- Save Today’s Pick ----------
