@@ -31,8 +31,9 @@ try:
         load_master_list,
         load_history,
         save_today_pick,
-        save_master_list,
-        save_history,
+        add_recipe_to_master,
+        edit_recipe_in_master,
+        delete_recipe_from_master,
         delete_today_pick,
         get_file_sha
     )
@@ -40,8 +41,9 @@ except Exception:
     load_master_list = None
     load_history = None
     save_today_pick = None
-    save_master_list = None
-    save_history = None
+    add_recipe_to_master = None
+    edit_recipe_in_master = None
+    delete_recipe_from_master = None
     delete_today_pick = None
     get_file_sha = None
 
@@ -121,18 +123,18 @@ def try_save_master_list(df: pd.DataFrame):
             st.error("GitHub repo or token not configured.")
             return False
 
-        sha = None
-        if callable(get_file_sha):
-            sha = get_file_sha(MASTER_LIST_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
-
-        save_master_list(df, repo=GITHUB_REPO, branch=GITHUB_BRANCH, sha=sha)
+        # overwrite on GitHub
+        repo_df = pd.DataFrame(df)
+        repo_df = repo_df[["Recipe", "Item Type"]]  # enforce schema
+        add_recipe_to_master("", "", repo=GITHUB_REPO, branch=GITHUB_BRANCH)  # no-op add ensures file exists
+        file = GITHUB_REPO.get_contents(MASTER_LIST_FILE, ref=GITHUB_BRANCH)
+        GITHUB_REPO.update_file(file.path, "Update master list", repo_df.to_csv(index=False), file.sha, branch=GITHUB_BRANCH)
 
         st.success("✅ Master list updated on GitHub!")
         st.cache_data.clear()
-        if callable(load_master_list):
-            df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
         safe_rerun()
         return True
+
     except Exception as e:
         st.error(f"❌ GitHub save failed: {type(e).__name__} - {e}")
         return False
@@ -143,11 +145,11 @@ def try_save_history(df: pd.DataFrame):
             st.error("GitHub repo or token not configured.")
             return False
 
-        sha = None
-        if callable(get_file_sha):
-            sha = get_file_sha(HISTORY_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
-
-        save_history(df, repo=GITHUB_REPO, branch=GITHUB_BRANCH, sha=sha)
+        repo_df = pd.DataFrame(df)
+        repo_df = repo_df[["Date", "Recipe", "Item Type"]]  # enforce schema
+        delete_today_pick(today_str="1900-01-01", repo=GITHUB_REPO, branch=GITHUB_BRANCH)  # no-op ensures file exists
+        file = GITHUB_REPO.get_contents(HISTORY_FILE, ref=GITHUB_BRANCH)
+        GITHUB_REPO.update_file(file.path, "Update history", repo_df.to_csv(index=False), file.sha, branch=GITHUB_BRANCH)
 
         st.success("✅ History updated on GitHub!")
         st.cache_data.clear()
@@ -162,7 +164,7 @@ def try_save_history(df: pd.DataFrame):
 # -----------------------
 # Load data
 # -----------------------
-master_df, history_df, master_sha, history_sha = load_data()
+#master_df, history_df, master_sha, history_sha = load_data()
 
 # -----------------------
 # Load data into session state
