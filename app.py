@@ -186,6 +186,7 @@ page = st.sidebar.radio("Go to", ["Pick Today’s Recipe", "Master List", "Histo
 # Utility: today's pick
 today = date.today()
 today_pick = None
+history_df = st.session_state.history_df
 if not history_df.empty and "Date" in history_df.columns:
     hx = history_df.dropna(subset=["Date"]).copy()
     if not hx.empty:
@@ -193,7 +194,6 @@ if not history_df.empty and "Date" in history_df.columns:
         sel = hx[hx["DateOnly"] == today]
         if not sel.empty:
             today_pick = sel.sort_values("Date", ascending=False).iloc[0]["Recipe"]
-
 # -----------------------
 # PICK TODAY
 # -----------------------
