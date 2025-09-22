@@ -183,6 +183,10 @@ st.title("🍴 NextBite – Meal Planner App")
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["Pick Today’s Recipe", "Master List", "History"])
 
+# Always sync session state copies
+master_df = st.session_state.master_df
+history_df = st.session_state.history_df
+
 # Utility: today's pick
 today = date.today()
 today_pick = None
@@ -280,6 +284,7 @@ elif page == "Master List":
 
     if callable(load_master_list) and GITHUB_REPO:
         master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
+        st.session_state.master_df = master_df
         try:
             master_sha = get_file_sha(MASTER_LIST_FILE, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
         except Exception:
@@ -369,6 +374,9 @@ elif page == "Master List":
 elif page == "History":
     st.header("History")
     st.write("Use the static filter buttons below to view historical picks.")
+
+    master_df = st.session_state.master_df
+    history_df = st.session_state.history_df
 
     col_left, col_mid, col_right = st.columns([1, 2, 1])
     with col_mid:
