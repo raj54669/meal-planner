@@ -25,9 +25,9 @@ def load_master_list(repo=None, branch="main", filename="master_list.csv"):
         if repo:
             file_content = repo.get_contents(filename, ref=branch)
             df = pd.read_csv(StringIO(file_content.decoded_content.decode("utf-8")))
-            return df
         else:
-            return pd.read_csv(filename)
+            df = pd.read_csv(filename)
+        return df
     except Exception as e:
         st.error(f"❌ Failed to load {filename} from branch '{branch}': {e}")
         return pd.DataFrame(columns=["Recipe", "Item Type"])
@@ -38,9 +38,14 @@ def load_history(repo=None, branch="main", filename="history.csv"):
         if repo:
             file_content = repo.get_contents(filename, ref=branch)
             df = pd.read_csv(StringIO(file_content.decoded_content.decode("utf-8")))
-            return df
         else:
-            return pd.read_csv(filename)
+            df = pd.read_csv(filename)
+
+        # 🔑 Ensure Date is always datetime
+        if "Date" in df.columns:
+            df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+
+        return df
     except Exception as e:
         st.error(f"❌ Failed to load {filename} from branch '{branch}': {e}")
         return pd.DataFrame(columns=["Date", "Recipe", "Item Type"])
@@ -51,12 +56,22 @@ def save_today_pick(recipe, item_type="", repo=None, branch="main", filename="hi
     new_row = pd.DataFrame([{"Date": today, "Recipe": recipe, "Item Type": item_type}])
 
     history = load_history(repo, branch, filename)
-    history = history[history["Date"] != today]  # drop today's old if exists
+    # Remove any existing row for today
+    history = history[history["Date"].dt.strftime("%Y-%m-%d") != today]
     updated = pd.concat([history, new_row], ignore_index=True)
+
+    # 🔑 Ensure Date is datetime
+    updated["Date"] = pd.to_datetime(updated["Date"], errors="coerce")
 
     if repo:
         file = repo.get_contents(filename, ref=branch)
-        repo.update_file(file.path, f"Update history {today}", updated.to_csv(index=False), file.sha, branch=branch)
+        repo.update_file(
+            file.path,
+            f"Update history {today}",
+            updated.to_csv(index=False),
+            file.sha,
+            branch=branch
+        )
     else:
         atomic_save(updated, filename)
 
@@ -68,11 +83,20 @@ def delete_today_pick(today_str=None, repo=None, branch="main", filename="histor
         today_str = datetime.today().strftime("%Y-%m-%d")
 
     history = load_history(repo, branch, filename)
-    updated = history[history["Date"] != today_str].reset_index(drop=True)
+    updated = history[history["Date"].dt.strftime("%Y-%m-%d") != today_str].reset_index(drop=True)
+
+    # 🔑 Ensure Date is datetime
+    updated["Date"] = pd.to_datetime(updated["Date"], errors="coerce")
 
     if repo:
         file = repo.get_contents(filename, ref=branch)
-        repo.update_file(file.path, f"Delete today {today_str}", updated.to_csv(index=False), file.sha, branch=branch)
+        repo.update_file(
+            file.path,
+            f"Delete today {today_str}",
+            updated.to_csv(index=False),
+            file.sha,
+            branch=branch
+        )
     else:
         atomic_save(updated, filename)
 
