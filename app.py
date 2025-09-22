@@ -143,7 +143,7 @@ def try_save_history(df: pd.DataFrame):
     try:
         if not GITHUB_REPO or not GITHUB_TOKEN:
             st.error("GitHub repo or token not configured.")
-            return False
+            return df   # return unchanged DataFrame
 
         repo_df = pd.DataFrame(df)
         repo_df = repo_df[["Date", "Recipe", "Item Type"]]  # enforce schema
@@ -153,13 +153,17 @@ def try_save_history(df: pd.DataFrame):
 
         st.success("✅ History updated on GitHub!")
         st.cache_data.clear()
+
+        # 🔑 Reload and return the new DataFrame
         if callable(load_history):
-            df = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
-        safe_rerun()
-        return True
+            updated = load_history(GITHUB_REPO, branch=GITHUB_BRANCH)
+            return updated
+
+        return df
     except Exception as e:
         st.error(f"❌ GitHub save failed: {type(e).__name__} - {e}")
-        return False
+        return df
+
 
 # -----------------------
 # Load data
@@ -431,10 +435,11 @@ elif page == "History":
         if st.button("Remove Today's Entry (if exists)"):
             try:
                 new_hist = history_df[history_df["Date"].dt.date != date.today()].reset_index(drop=True)
-                st.session_state.history_df = try_save_history(new_hist) or history_df
+                st.session_state.history_df = try_save_history(new_hist)  # 🔑 now gets the updated DataFrame
                 st.success("🗑️ Removed today’s entry live!")
-
+                safe_rerun()
             except Exception:
                 st.error("Unable to remove today's entry. Check history data format.")
+
     else:
         st.info("History is empty.")
