@@ -194,7 +194,8 @@ history_df = st.session_state.history_df
 if not history_df.empty and "Date" in history_df.columns:
     hx = history_df.dropna(subset=["Date"]).copy()
     if not hx.empty:
-        hx["DateOnly"] = pd.to_datetime(hx["Date"]).dt.date
+        hx["Date"] = pd.to_datetime(hx["Date"], errors="coerce")
+        hx["DateOnly"] = hx["Date"].dt.date
         sel = hx[hx["DateOnly"] == today]
         if not sel.empty:
             today_pick = sel.sort_values("Date", ascending=False).iloc[0]["Recipe"]
