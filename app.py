@@ -404,8 +404,15 @@ elif page == "History":
             filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
 
         filtered = filtered.copy()
+        
+        # Ensure proper datetime conversion first
+        filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce")
+        
+        # Calculate "Days Ago" safely
         filtered["Days Ago"] = filtered["Date"].apply(lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA)
-        filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce").dt.strftime("%d-%m-%Y")
+        
+        # Format back to dd-mm-YYYY for display
+        filtered["Date"] = filtered["Date"].dt.strftime("%d-%m-%Y")
 
         try:
             filtered["__sort_date__"] = pd.to_datetime(filtered["Date"], format="%d-%m-%Y", errors="coerce")
