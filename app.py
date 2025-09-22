@@ -6,6 +6,9 @@ import os
 from github import Github
 from ui_widgets import display_table   # ✅ use central table formatter
 
+# ... other imports ...
+import data_manager as dm
+
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO_NAME = os.getenv("GITHUB_REPO", "raj54669/meal-planner")
 GITHUB_BRANCH = "main"
@@ -46,6 +49,13 @@ try:
     from recommendations import recommend
 except Exception:
     recommend = None
+
+# --- Initialize Session State ---
+if "history_df" not in st.session_state:
+    st.session_state.history_df = dm.load_history()
+
+if "master_df" not in st.session_state:
+    st.session_state.master_df = dm.load_master_list()
 
 # -----------------------
 # Config / Secrets
@@ -220,9 +230,9 @@ if page == "Pick Today’s Recipe":
                     recipe_choice = st.radio("Select recipe to save for today", choices, key="bytype_choice")
                     if st.button("Save Today's Pick (By Type)"):
                         try:
-                            history_df = save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+                            st.session_state.history_df = save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
                             st.cache_data.clear()
-                            st.success(f"Saved **{recipe_choice}** to history (GitHub updated).")
+                            st.success(f"✅ Saved **{recipe_choice}** and updated live!")
                             safe_rerun()
                         except Exception as e:
                             st.error(f"Failed to save history: {e}")
@@ -254,13 +264,9 @@ if page == "Pick Today’s Recipe":
                     new_row = {"Date": today.strftime("%Y-%m-%d"), "Recipe": recipe_choice, "Item Type": item_type}
                     new_history = pd.concat([history_df, pd.DataFrame([new_row])], ignore_index=True)
 
-                    ok = try_save_history(new_history)
-                    if ok:
-                        st.success(f"Saved **{recipe_choice}** to history.")
-                        safe_rerun()
-                    else:
-                        st.error("Failed to save history. Check logs.")
-
+                    st.session_state.history_df = try_save_history(new_history) or history_df
+                    st.success(f"✅ Saved **{recipe_choice}** and updated live!")
+                    
 # -----------------------
 # MASTER LIST
 # -----------------------
@@ -291,14 +297,8 @@ elif page == "Master List":
                     [master_df, pd.DataFrame([{"Recipe": new_name.strip(), "Item Type": new_type.strip()}])],
                     ignore_index=True
                 )
-                ok = try_save_master_list(new_master)
-                if ok:
-                    st.cache_data.clear()
-                    master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
-                    st.success(f"Added **{new_name}** to master list.")
-                    safe_rerun()
-                else:
-                    st.error("Failed to save master list. Check logs.")
+                st.session_state.master_df = try_save_master_list(new_master) or master_df
+                st.success(f"✅ Added **{new_name}** and updated live!")
 
     st.markdown("")
 
@@ -338,13 +338,10 @@ elif page == "Master List":
                 if st.button("Save Edit", key=f"save_edit_{i}"):
                     master_df.at[i, "Recipe"] = edit_name
                     master_df.at[i, "Item Type"] = edit_type
-                    ok = try_save_master_list(master_df)
-                    if ok:
-                        st.cache_data.clear()
-                        master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
-                        st.success("Updated master list.")
-                        st.session_state["edit_row"] = None
-                        safe_rerun()
+                    st.session_state.master_df = try_save_master_list(master_df) or master_df
+                    st.success("✏️ Recipe updated live!")
+                    st.session_state["edit_row"] = None
+
                     else:
                         st.error("Failed to save master list. See logs.")
                 if st.button("Cancel", key=f"cancel_edit_{i}"):
@@ -355,13 +352,10 @@ elif page == "Master List":
                 st.warning(f"Confirm delete '{row['Recipe']}'?")
                 if st.button("Confirm Delete", key=f"confirm_del_{i}"):
                     new_master = master_df.drop(i).reset_index(drop=True)
-                    ok = try_save_master_list(new_master)
-                    if ok:
-                        st.cache_data.clear()
-                        master_df = load_master_list(GITHUB_REPO, branch=GITHUB_BRANCH)
-                        st.success("Deleted entry.")
-                        st.session_state["delete_row"] = None
-                        safe_rerun()
+                    st.session_state.master_df = try_save_master_list(new_master) or master_df
+                    st.success("🗑️ Recipe deleted live!")
+                    st.session_state["delete_row"] = None
+
                     else:
                         st.error("Failed to delete entry. See logs.")
                 if st.button("Cancel Delete", key=f"cancel_del_{i}"):
@@ -415,10 +409,8 @@ elif page == "History":
         if st.button("Remove Today's Entry (if exists)"):
             try:
                 new_hist = history_df[history_df["Date"].dt.date != date.today()].reset_index(drop=True)
-                ok = try_save_history(new_hist)
-                if ok:
-                    st.success("Removed today's entry.")
-                    safe_rerun()
+                st.session_state.history_df = try_save_history(new_hist) or history_df
+                st.success("🗑️ Removed today’s entry live!")
                 else:
                     st.error("Failed to update history. Check logs.")
             except Exception:
