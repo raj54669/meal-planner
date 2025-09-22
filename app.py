@@ -342,8 +342,6 @@ elif page == "Master List":
                     st.success("✏️ Recipe updated live!")
                     st.session_state["edit_row"] = None
 
-                    else:
-                        st.error("Failed to save master list. See logs.")
                 if st.button("Cancel", key=f"cancel_edit_{i}"):
                     st.session_state["edit_row"] = None
                     safe_rerun()
@@ -356,8 +354,7 @@ elif page == "Master List":
                     st.success("🗑️ Recipe deleted live!")
                     st.session_state["delete_row"] = None
 
-                    else:
-                        st.error("Failed to delete entry. See logs.")
+
                 if st.button("Cancel Delete", key=f"cancel_del_{i}"):
                     st.session_state["delete_row"] = None
                     safe_rerun()
@@ -411,8 +408,7 @@ elif page == "History":
                 new_hist = history_df[history_df["Date"].dt.date != date.today()].reset_index(drop=True)
                 st.session_state.history_df = try_save_history(new_hist) or history_df
                 st.success("🗑️ Removed today’s entry live!")
-                else:
-                    st.error("Failed to update history. Check logs.")
+
             except Exception:
                 st.error("Unable to remove today's entry. Check history data format.")
     else:
