@@ -50,13 +50,6 @@ try:
 except Exception:
     recommend = None
 
-# --- Initialize Session State (load from GitHub) ---
-if "master_df" not in st.session_state or "history_df" not in st.session_state:
-    master_df, history_df, _, _ = load_data()
-    st.session_state.master_df = master_df
-    st.session_state.history_df = history_df
-
-
 # -----------------------
 # Config / Secrets
 # -----------------------
@@ -170,6 +163,14 @@ def try_save_history(df: pd.DataFrame):
 # Load data
 # -----------------------
 master_df, history_df, master_sha, history_sha = load_data()
+
+# -----------------------
+# Load data into session state
+# -----------------------
+if "master_df" not in st.session_state or "history_df" not in st.session_state:
+    master_df, history_df, _, _ = load_data()
+    st.session_state.master_df = master_df
+    st.session_state.history_df = history_df
 
 # -----------------------
 # Title
