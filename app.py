@@ -240,6 +240,8 @@ if page == "Pick Today’s Recipe":
                     if st.button("Save Today's Pick (By Type)"):
                         try:
                             st.session_state.history_df = save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+                            # Ensure Date is datetime
+                            st.session_state.history_df["Date"] = pd.to_datetime(st.session_state.history_df["Date"], errors="coerce")
                             st.cache_data.clear()
                             st.success(f"✅ Saved **{recipe_choice}** and updated live!")
                             safe_rerun()
@@ -272,9 +274,12 @@ if page == "Pick Today’s Recipe":
                     item_type = chosen_row.get("Item Type", "")
                     new_row = {"Date": today.strftime("%Y-%m-%d"), "Recipe": recipe_choice, "Item Type": item_type}
                     new_history = pd.concat([history_df, pd.DataFrame([new_row])], ignore_index=True)
-
+                    # Ensure Date is datetime
+                    new_history["Date"] = pd.to_datetime(new_history["Date"], errors="coerce")
+                    
                     st.session_state.history_df = try_save_history(new_history) or history_df
                     st.success(f"✅ Saved **{recipe_choice}** and updated live!")
+
                     
 # -----------------------
 # MASTER LIST
