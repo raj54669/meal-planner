@@ -1,6 +1,7 @@
 import pandas as pd
+import streamlit as st   # ✅ needed for st.error()
 from datetime import datetime
-from io import StringIO
+import io                # ✅ use io.StringIO
 import hashlib
 import os
 import tempfile
@@ -28,9 +29,9 @@ def load_master_list(repo=None, branch="main"):
         else:
             return pd.read_csv("master_list.csv")
     except Exception as e:
-        st.error(f"❌ Failed to load master_list.csv: {e}")
+        st.error(f"❌ Failed to load master_list.csv from {branch}: {e}")
         return pd.DataFrame(columns=["Recipe", "Item Type"])
-        
+
 # ---------- Load History ----------
 def load_history(repo=None, branch="main"):
     try:
@@ -41,7 +42,7 @@ def load_history(repo=None, branch="main"):
         else:
             return pd.read_csv("history.csv")
     except Exception as e:
-        st.error(f"❌ Failed to load history.csv: {e}")
+        st.error(f"❌ Failed to load history.csv from {branch}: {e}")
         return pd.DataFrame(columns=["Date", "Recipe", "Item Type"])
 
 # ---------- Save Today’s Pick ----------
@@ -50,8 +51,7 @@ def save_today_pick(recipe, item_type="", repo=None, branch="main"):
     new_row = pd.DataFrame([{"Date": today, "Recipe": recipe, "Item Type": item_type}])
 
     history = load_history(repo, branch)
-    # Drop any existing entry for today
-    history = history[history["Date"] != today]
+    history = history[history["Date"] != today]  # drop today if exists
     updated = pd.concat([history, new_row], ignore_index=True)
 
     if repo:
@@ -125,14 +125,13 @@ def delete_recipe_from_master(recipe, repo=None, branch="main"):
 
 # ---------- Utility: Get File SHA ----------
 def get_file_sha(filepath: str, repo=None, branch="main"):
-    """
-    Return SHA from GitHub if repo is given, else local SHA1 hash.
-    """
+    """Return SHA from GitHub if repo is given, else local SHA1 hash."""
     if repo:
         try:
             file = repo.get_contents(filepath, ref=branch)
             return file.sha
-        except Exception:
+        except Exception as e:
+            st.error(f"❌ Failed to get SHA for {filepath}: {e}")
             return None
 
     if not os.path.exists(filepath):
