@@ -206,6 +206,7 @@ if page == "Pick Today’s Recipe":
     mode = st.radio("Choose option:", ["By Item Type", "Today's Suggestions"], horizontal=True)
 
     if mode == "By Item Type":
+        master_df = st.session_state.master_df
         types = master_df["Item Type"].dropna().astype(str).unique().tolist()
         types = [t for t in types if str(t).strip() != ""]
         types = sorted(types)
