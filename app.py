@@ -313,12 +313,18 @@ elif page == "Master List":
             if not new_name.strip():
                 st.warning("Provide a recipe name.")
             else:
-                new_master = pd.concat(
-                    [master_df, pd.DataFrame([{"Recipe": new_name.strip(), "Item Type": new_type.strip()}])],
-                    ignore_index=True
-                )
-                st.session_state.master_df = try_save_master_list(new_master) or master_df
-                st.success(f"✅ Added **{new_name}** and updated live!")
+                # prevent duplicates (case-insensitive)
+                exists = master_df["Recipe"].str.lower().str.strip().eq(new_name.strip().lower()).any()
+                if exists:
+                    st.error(f"⚠️ Recipe **{new_name}** already exists in Master List.")
+                else:
+                    new_master = pd.concat(
+                        [master_df, pd.DataFrame([{"Recipe": new_name.strip(), "Item Type": new_type.strip()}])],
+                        ignore_index=True
+                    )
+                    st.session_state.master_df = try_save_master_list(new_master) or master_df
+                    st.success(f"✅ Added **{new_name}** and updated live!")
+
 
     st.markdown("")
 
