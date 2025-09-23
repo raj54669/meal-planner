@@ -240,7 +240,7 @@ if page == "Pick Today’s Recipe":
 
                 choices = filtered["Recipe"].astype(str).tolist()
                 if choices:
-                    recipe_choice = recipe_selector("Select recipe to save for today", choices, key="bytype_choice")
+                    recipe_choice = st.radio("Select recipe to save for today", choices, key="bytype_choice")
                     if st.button("Save Today's Pick (By Type)"):
                         try:
                             st.session_state.history_df = save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
