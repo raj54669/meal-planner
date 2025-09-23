@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import date, timedelta
 import os
 from github import Github
-from ui_widgets import display_table, recipe_selector, recipe_card
+from ui_widgets import display_table, recipe_card
 
 # ... other imports ...
 import data_manager as dm
