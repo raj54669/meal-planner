@@ -6,39 +6,6 @@ import os
 from github import Github
 from ui_widgets import display_table, recipe_card
 import data_manager as dm
-import time
-
-# -----------------------
-# Auto-reload watchdog for mobile freeze
-# -----------------------
-
-if "last_render" not in st.session_state:
-    st.session_state["last_render"] = time.time()
-
-now = time.time()
-
-# If page was idle (e.g., phone locked) for more than 45s, reload on wake
-if now - st.session_state["last_render"] > 45:
-    st.session_state.clear()
-    st.markdown(
-        "<script>window.location.reload()</script>",
-        unsafe_allow_html=True
-    )
-
-st.session_state["last_render"] = now
-
-# Inject JS to detect when tab becomes visible again
-st.markdown("""
-<script>
-document.addEventListener("visibilitychange", function() {
-    if (document.visibilityState === "visible") {
-        // Force reload when returning from background
-        window.location.reload();
-    }
-});
-</script>
-""", unsafe_allow_html=True)
-
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO_NAME = os.getenv("GITHUB_REPO", "raj54669/meal-planner")
