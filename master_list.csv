@@ -1,23 +1,21 @@
 Recipe,Item Type
-Maggie,Fast food
-Lal-Bataka,Fast food
 Bataka-Vada,Fast food
 Idada,Fast food
+Lal-Bataka,Fast food
 Locho,Fast food
-Patra,Occassional
+Maggie,Fast food
 Egg,Occassional
+Patra,Occassional
 Chinese,Out Source
 Paneer Sabji,Out Source
 Hyderabadi Biryani,Rice
-Vagharelo Bhaat,Rice
 Khichdi-Kadhi,Rice
-Savji Bhaat,Rice
 Paneer Pulao,Rice
-Dosa,Roti
-Pav-Bhaji,Roti
-Chevti-Dal,Roti
+Savji Bhaat,Rice
+Vagharelo Bhaat,Rice
 Aloo Parotha,Roti
-Paneer Bhurji,Roti
+Chevti-Dal,Roti
+Dosa,Roti
 Frankie,Roti
-Dineout,Dineout
-,
+Paneer Bhurji,Roti
+Pav-Bhaji,Roti
