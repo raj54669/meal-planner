@@ -284,7 +284,8 @@ if page == "Pick Today’s Recipe":
                     result = try_save_history(new_history)
                     st.session_state.history_df = result if result is not None else history_df
                     st.success(f"✅ Saved **{recipe_choice}** and updated live!")
-
+                    st.cache_data.clear()
+                    safe_rerun()
                     
 # -----------------------
 # MASTER LIST
