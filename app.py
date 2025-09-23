@@ -440,7 +440,11 @@ elif page == "History":
             filtered = filtered.sort_index(ascending=True)
 
         # Show the history table
-        display_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
+        if filtered.empty:
+            st.info("📭 No records found for this period.")
+        else:
+            display_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
+
 
         if st.button("Remove Today's Entry (if exists)"):
             try:
