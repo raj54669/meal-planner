@@ -394,35 +394,34 @@ elif page == "History":
         b1, b2 = st.columns([1, 1])
         btn_curr_month = b1.button("Current Month", key="history_curr_month")
         btn_prev_month = b2.button("Previous Month", key="history_prev_month")
-        
-        filtered = history_df.copy()
-        
-        if not filtered.empty and "Date" in filtered.columns:
-            master_map = dict(zip(master_df["Recipe"].astype(str), master_df["Item Type"].astype(str)))
-            filtered["Item Type"] = filtered["Item Type"].fillna(filtered["Recipe"].map(master_map))
-        
-            today_local = date.today()
-        
-            # 👇 Apply current month by default
-            first = today_local.replace(day=1)
-            filtered = filtered[(filtered["Date"].dt.date >= first) & (filtered["Date"].dt.date <= today_local)]
-        
-            # Override if "Previous Month" clicked
-            if btn_prev_month:
-                first_of_this = today_local.replace(day=1)
-                last_of_prev = first_of_this - timedelta(days=1)
-                first_of_prev = last_of_prev.replace(day=1)
-                filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
+
+    # 👇 Start filtering outside of `with col_mid:`
+    filtered = history_df.copy()
+
+    if not filtered.empty and "Date" in filtered.columns:
+        master_map = dict(zip(master_df["Recipe"].astype(str), master_df["Item Type"].astype(str)))
+        filtered["Item Type"] = filtered["Item Type"].fillna(filtered["Recipe"].map(master_map))
+
+        today_local = date.today()
+
+        # Apply current month by default
+        first = today_local.replace(day=1)
+        filtered = filtered[(filtered["Date"].dt.date >= first) & (filtered["Date"].dt.date <= today_local)]
+
+        # Override if "Previous Month" clicked
+        if btn_prev_month:
+            first_of_this = today_local.replace(day=1)
+            last_of_prev = first_of_this - timedelta(days=1)
+            first_of_prev = last_of_prev.replace(day=1)
+            filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
 
         filtered = filtered.copy()
         
-        # Ensure proper datetime conversion first
+        # Ensure proper datetime conversion
         filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce")
-        
-        # Calculate "Days Ago" safely
-        filtered["Days Ago"] = filtered["Date"].apply(lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA)
-        
-        # Format back to dd-mm-YYYY for display
+        filtered["Days Ago"] = filtered["Date"].apply(
+            lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA
+        )
         filtered["Date"] = filtered["Date"].dt.strftime("%d-%m-%Y")
 
         try:
@@ -431,17 +430,16 @@ elif page == "History":
         except Exception:
             filtered = filtered.sort_index(ascending=True)
 
-        # ✅ use shared table UI
+        # Show the history table
         display_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
 
         if st.button("Remove Today's Entry (if exists)"):
             try:
                 new_hist = history_df[history_df["Date"].dt.date != date.today()].reset_index(drop=True)
-                st.session_state.history_df = try_save_history(new_hist)  # 🔑 now gets the updated DataFrame
+                st.session_state.history_df = try_save_history(new_hist)
                 st.success("🗑️ Removed today’s entry live!")
                 safe_rerun()
             except Exception:
                 st.error("Unable to remove today's entry. Check history data format.")
-
     else:
         st.info("History is empty.")
