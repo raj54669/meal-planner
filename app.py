@@ -394,24 +394,25 @@ elif page == "History":
         b1, b2 = st.columns([1, 1])
         btn_curr_month = b1.button("Current Month", key="history_curr_month")
         btn_prev_month = b2.button("Previous Month", key="history_prev_month")
-
-    filtered = history_df.copy()
-
-    if not filtered.empty and "Date" in filtered.columns:
-        master_map = dict(zip(master_df["Recipe"].astype(str), master_df["Item Type"].astype(str)))
-        filtered["Item Type"] = filtered["Item Type"].fillna(filtered["Recipe"].map(master_map))
-
-        today_local = date.today()
-
-        if btn_curr_month:
+        
+        filtered = history_df.copy()
+        
+        if not filtered.empty and "Date" in filtered.columns:
+            master_map = dict(zip(master_df["Recipe"].astype(str), master_df["Item Type"].astype(str)))
+            filtered["Item Type"] = filtered["Item Type"].fillna(filtered["Recipe"].map(master_map))
+        
+            today_local = date.today()
+        
+            # 👇 Apply current month by default
             first = today_local.replace(day=1)
             filtered = filtered[(filtered["Date"].dt.date >= first) & (filtered["Date"].dt.date <= today_local)]
-
-        elif btn_prev_month:
-            first_of_this = today_local.replace(day=1)
-            last_of_prev = first_of_this - timedelta(days=1)
-            first_of_prev = last_of_prev.replace(day=1)
-            filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
+        
+            # Override if "Previous Month" clicked
+            if btn_prev_month:
+                first_of_this = today_local.replace(day=1)
+                last_of_prev = first_of_this - timedelta(days=1)
+                first_of_prev = last_of_prev.replace(day=1)
+                filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
 
         filtered = filtered.copy()
         
