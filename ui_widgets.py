@@ -3,48 +3,7 @@ import streamlit as st
 import pandas as pd
 
 # -----------------------
-# Global CSS styling
-# -----------------------
-st.markdown("""
-<style>
-/* Wrapper for responsive tables */
-.nb-table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Original blue table styling */
-.nb-table {
-    border-collapse: collapse;
-    width: 100%;
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-}
-.nb-table th, .nb-table td {
-    padding: 6px 8px;
-    border: 1px solid #000;
-    text-align: center;
-    font-weight: 600;   /* Bold headers and rows */
-    font-size: 13px;
-    color: black;
-}
-.nb-table thead th {
-    background: #004a99;
-    color: white;
-    font-size: 14px;
-}
-
-/* Bigger buttons for touch (mobile-friendly) */
-.stButton>button {
-    width: 100%;
-    font-size: 16px;
-    padding: 10px;
-    border-radius: 8px;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# -----------------------
-# Core table functions
+# Original table functions (fixed to always render HTML)
 # -----------------------
 def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = "Last Eaten"):
     df = df.copy()
@@ -90,6 +49,26 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
             </tbody>
         </table>
     </div>
+    <style>
+    .nb-table {{
+        border-collapse: collapse;
+        width: 100%;
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }}
+    .nb-table th, .nb-table td {{
+        padding: 6px 8px;
+        border: 1px solid #000;
+        text-align: center;
+        font-weight: 600;
+        font-size: 13px;
+        color: black;
+    }}
+    .nb-table thead th {{
+        background: #004a99;
+        color: white;
+        font-size: 14px;
+    }}
+    </style>
     """
     return full_html
 
@@ -99,15 +78,11 @@ def display_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = 
     html = df_to_html_table(df, days_col=days_col, last_col=last_col)
     st.markdown(html, unsafe_allow_html=True)
 
+
 # -----------------------
-# Extra helpers (mobile-specific)
+# Extra mobile helpers (still included)
 # -----------------------
 def recipe_selector(label, options, key="recipe_choice"):
-    """
-    Mobile-friendly recipe selector:
-    - Use selectbox if list is long (better for mobile)
-    - Use radio if short (better for desktop)
-    """
     if len(options) > 5:
         return st.selectbox(label, options, key=key)
     else:
@@ -115,10 +90,6 @@ def recipe_selector(label, options, key="recipe_choice"):
 
 
 def recipe_card(i, row):
-    """
-    Mobile-friendly recipe card with expand/collapse
-    (optional: use in Master List instead of columns)
-    """
     with st.expander(f"{row['Recipe']} – {row['Item Type']}"):
         col1, col2 = st.columns(2)
         if col1.button("✏️ Edit", key=f"edit_{i}"):
