@@ -415,16 +415,18 @@ elif page == "History":
 
         today_local = date.today()
 
-        # Apply current month by default
-        first = today_local.replace(day=1)
-        filtered = filtered[(filtered["Date"].dt.date >= first) & (filtered["Date"].dt.date <= today_local)]
-
-        # Override if "Previous Month" clicked
+        # Decide which month filter to apply
         if btn_prev_month:
+            # Previous month
             first_of_this = today_local.replace(day=1)
             last_of_prev = first_of_this - timedelta(days=1)
             first_of_prev = last_of_prev.replace(day=1)
             filtered = filtered[(filtered["Date"].dt.date >= first_of_prev) & (filtered["Date"].dt.date <= last_of_prev)]
+        else:
+            # Current month
+            first = today_local.replace(day=1)
+            filtered = filtered[(filtered["Date"].dt.date >= first) & (filtered["Date"].dt.date <= today_local)]
+
 
         filtered = filtered.copy()
         
