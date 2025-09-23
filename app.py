@@ -281,7 +281,8 @@ if page == "Pick Today’s Recipe":
                     # Ensure Date is datetime
                     new_history["Date"] = pd.to_datetime(new_history["Date"], errors="coerce")
                     
-                    st.session_state.history_df = try_save_history(new_history) or history_df
+                    result = try_save_history(new_history)
+                    st.session_state.history_df = result if result is not None else history_df
                     st.success(f"✅ Saved **{recipe_choice}** and updated live!")
 
                     
