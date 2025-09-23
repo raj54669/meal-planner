@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import date, timedelta
 import os
 from github import Github
-from ui_widgets import display_table   # ✅ use central table formatter
+from ui_widgets import display_table, recipe_selector, recipe_card
 
 # ... other imports ...
 import data_manager as dm
@@ -240,7 +240,7 @@ if page == "Pick Today’s Recipe":
 
                 choices = filtered["Recipe"].astype(str).tolist()
                 if choices:
-                    recipe_choice = st.radio("Select recipe to save for today", choices, key="bytype_choice")
+                    recipe_choice = recipe_selector("Select recipe to save for today", choices, key="bytype_choice")
                     if st.button("Save Today's Pick (By Type)"):
                         try:
                             st.session_state.history_df = save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
@@ -271,7 +271,7 @@ if page == "Pick Today’s Recipe":
 
             choices = rec_df["Recipe"].astype(str).tolist()
             if choices:
-                recipe_choice = st.radio("Select recipe to save for today", choices, key="suggest_choice")
+                recipe_choice = recipe_selector("Select recipe to save for today", choices, key="suggest_choice")
                 if st.button("Save Today's Pick (Suggestion)"):
 
                     chosen_row = rec_df[rec_df["Recipe"] == recipe_choice].iloc[0].to_dict()
@@ -346,9 +346,8 @@ elif page == "Master List":
         cols[3].markdown("**Delete**")
 
         for i, row in master_df.reset_index(drop=True).iterrows():
-            cols = st.columns([4, 2, 1, 1])
-            cols[0].write(row["Recipe"])
-            cols[1].write(row["Item Type"])
+            recipe_card(i, row)
+
 
             if cols[2].button("✏️", key=f"edit_btn_{i}"):
                 st.session_state["edit_row"] = i
