@@ -79,16 +79,6 @@ def display_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = 
     st.markdown(html, unsafe_allow_html=True)
 
 
-# -----------------------
-# Extra mobile helpers (still included)
-# -----------------------
-def recipe_selector(label, options, key="recipe_choice"):
-    if len(options) > 5:
-        return st.selectbox(label, options, key=key)
-    else:
-        return st.radio(label, options, key=key)
-
-
 def recipe_card(i, row):
     with st.expander(f"{row['Recipe']} – {row['Item Type']}"):
         col1, col2 = st.columns(2)
