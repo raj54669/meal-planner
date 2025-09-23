@@ -331,6 +331,8 @@ elif page == "Master List":
     if master_df.empty:
         st.info("No recipes found. Add some above.")
     else:
+        # Sort first by Item Type, then by Recipe (both ascending A-Z)
+        master_df = master_df.sort_values(by=["Item Type", "Recipe"], ascending=[True, True]).reset_index(drop=True)
         if "edit_row" not in st.session_state:
             st.session_state["edit_row"] = None
         if "delete_row" not in st.session_state:
