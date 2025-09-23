@@ -5,24 +5,27 @@ from datetime import date, timedelta
 import os
 from github import Github
 from ui_widgets import display_table, recipe_card
-import time
 import data_manager as dm
+import time
 
 # -----------------------
-# Session watchdog for mobile freeze
+# Auto-reload watchdog for mobile freeze
 # -----------------------
 
-# Initialize heartbeat timestamp in session state
-if "last_ping" not in st.session_state:
-    st.session_state["last_ping"] = time.time()
+if "last_render" not in st.session_state:
+    st.session_state["last_render"] = time.time()
 
-# If no update in > 60 seconds, clear session and reload
 now = time.time()
-if now - st.session_state["last_ping"] > 60:
+
+# If page was idle (e.g., phone locked) for more than 45s, reload on wake
+if now - st.session_state["last_render"] > 45:
     st.session_state.clear()
-    st.experimental_rerun()
-else:
-    st.session_state["last_ping"] = now
+    st.markdown(
+        "<script>window.location.reload()</script>",
+        unsafe_allow_html=True
+    )
+
+st.session_state["last_render"] = now
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO_NAME = os.getenv("GITHUB_REPO", "raj54669/meal-planner")
