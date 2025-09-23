@@ -13,19 +13,18 @@ st.markdown("""
     -webkit-overflow-scrolling: touch;
 }
 
-/* Compact table styling for mobile */
+/* Original blue table styling */
 .nb-table {
     border-collapse: collapse;
     width: 100%;
     font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    font-size: 14px;
 }
 .nb-table th, .nb-table td {
     padding: 6px 8px;
     border: 1px solid #000;
     text-align: center;
+    font-weight: 600;   /* Bold headers and rows */
     font-size: 13px;
-    font-weight: 600;  /* keep bold as in your original */
     color: black;
 }
 .nb-table thead th {
@@ -34,7 +33,7 @@ st.markdown("""
     font-size: 14px;
 }
 
-/* Buttons bigger for touch */
+/* Bigger buttons for touch (mobile-friendly) */
 .stButton>button {
     width: 100%;
     font-size: 16px;
@@ -45,7 +44,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------
-# Original functions (unchanged)
+# Core table functions
 # -----------------------
 def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = "Last Eaten"):
     df = df.copy()
@@ -101,7 +100,7 @@ def display_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = 
     st.markdown(html, unsafe_allow_html=True)
 
 # -----------------------
-# New helpers (added only)
+# Extra helpers (mobile-specific)
 # -----------------------
 def recipe_selector(label, options, key="recipe_choice"):
     """
@@ -118,7 +117,7 @@ def recipe_selector(label, options, key="recipe_choice"):
 def recipe_card(i, row):
     """
     Mobile-friendly recipe card with expand/collapse
-    (use in Master List instead of columns for mobile)
+    (optional: use in Master List instead of columns)
     """
     with st.expander(f"{row['Recipe']} – {row['Item Type']}"):
         col1, col2 = st.columns(2)
