@@ -410,6 +410,9 @@ elif page == "History":
         master_map = dict(zip(master_df["Recipe"].astype(str), master_df["Item Type"].astype(str)))
         filtered["Item Type"] = filtered["Item Type"].fillna(filtered["Recipe"].map(master_map))
 
+        # Ensure proper datetime conversion BEFORE filtering
+        filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce")
+
         today_local = date.today()
 
         # Apply current month by default
@@ -425,8 +428,6 @@ elif page == "History":
 
         filtered = filtered.copy()
         
-        # Ensure proper datetime conversion
-        filtered["Date"] = pd.to_datetime(filtered["Date"], errors="coerce")
         filtered["Days Ago"] = filtered["Date"].apply(
             lambda d: (date.today() - d.date()).days if pd.notna(d) else pd.NA
         )
