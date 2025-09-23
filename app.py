@@ -271,7 +271,7 @@ if page == "Pick Today’s Recipe":
 
             choices = rec_df["Recipe"].astype(str).tolist()
             if choices:
-                recipe_choice = recipe_selector("Select recipe to save for today", choices, key="suggest_choice")
+                recipe_choice = st.radio("Select recipe to save for today", choices, key="suggest_choice")
                 if st.button("Save Today's Pick (Suggestion)"):
 
                     chosen_row = rec_df[rec_df["Recipe"] == recipe_choice].iloc[0].to_dict()
