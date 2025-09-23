@@ -27,6 +27,19 @@ if now - st.session_state["last_render"] > 45:
 
 st.session_state["last_render"] = now
 
+# Inject JS to detect when tab becomes visible again
+st.markdown("""
+<script>
+document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible") {
+        // Force reload when returning from background
+        window.location.reload();
+    }
+});
+</script>
+""", unsafe_allow_html=True)
+
+
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO_NAME = os.getenv("GITHUB_REPO", "raj54669/meal-planner")
 GITHUB_BRANCH = "main"
