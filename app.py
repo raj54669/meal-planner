@@ -399,11 +399,12 @@ elif page == "History":
     master_df = st.session_state.master_df
     history_df = st.session_state.history_df
 
-    col_left, col_mid, col_right = st.columns([1, 2, 1])
-    with col_mid:
-        b1, b2 = st.columns([1, 1])
-        btn_curr_month = b1.button("Current Month", key="history_curr_month")
-        btn_prev_month = b2.button("Previous Month", key="history_prev_month")
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        btn_curr_month = st.button("Current Month", key="history_curr_month")
+    with col2:
+        btn_prev_month = st.button("Previous Month", key="history_prev_month")
+
 
     # 👇 Start filtering outside of `with col_mid:`
     filtered = history_df.copy()
