@@ -70,7 +70,7 @@ except Exception:
     HISTORY_CSV = os.environ.get("HISTORY_CSV", HISTORY_FILE)
 
 # Page config
-st.set_page_config(page_title="NextBite – Meal Planner App", page_icon="🍴", layout="centered", initial_sidebar_state="expanded")
+st.set_page_config(page_title="NextBite – Meal Planner App", page_icon="🍴", layout="centered")
 
 # -----------------------
 # Helpers
