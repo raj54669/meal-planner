@@ -8,13 +8,13 @@ import pandas as pd
 def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = "Last Eaten"):
     df = df.copy()
 
-    # Format Last Eaten column (DD-MM-YYYY)
+    # --- Format Last Eaten column (DD-MM-YYYY) ---
     if last_col in df.columns:
         df[last_col] = pd.to_datetime(df[last_col], errors="coerce")
         df[last_col] = df[last_col].dt.strftime("%d-%m-%Y")
         df[last_col] = df[last_col].fillna("")
 
-    # Format Days Ago column: integer or '-'
+    # --- Format Days Ago column ---
     if days_col in df.columns:
         def fmt_days(x):
             if pd.isna(x) or x == "" or x is None:
@@ -25,7 +25,7 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
                 return str(x)
         df[days_col] = df[days_col].apply(fmt_days)
 
-    # Build HTML table
+    # --- Build HTML table ---
     cols = list(df.columns)
     thead_cells = "".join(f"<th>{c}</th>" for c in cols)
     tbody_rows = ""
@@ -37,7 +37,7 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
             row_cells += f"<td>{v}</td>"
         tbody_rows += f"<tr>{row_cells}</tr>"
 
-    # Full HTML + CSS styling
+    # --- Full HTML + CSS styling with Light/Dark adaptation ---
     full_html = f"""
     <div class='nb-table-wrap'>
         <table class='nb-table'>
@@ -61,12 +61,29 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
         text-align: center;
         font-weight: 600;
         font-size: 13px;
-        color: black;
     }}
     .nb-table thead th {{
+        font-size: 14px;
+    }}
+
+    /* Light Mode */
+    [data-theme="light"] .nb-table thead th {{
         background: #004a99;
         color: white;
-        font-size: 14px;
+    }}
+    [data-theme="light"] .nb-table td {{
+        background: #f9f9f9;
+        color: black;
+    }}
+
+    /* Dark Mode */
+    [data-theme="dark"] .nb-table thead th {{
+        background: #333;
+        color: white;
+    }}
+    [data-theme="dark"] .nb-table td {{
+        background: #1e1e1e;
+        color: white;
     }}
     </style>
     """
@@ -74,7 +91,7 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
 
 
 def display_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = "Last Eaten"):
-    """Wrapper to show styled HTML tables in Streamlit."""
+    """Wrapper to show styled HTML tables in Streamlit with light/dark adaptation."""
     html = df_to_html_table(df, days_col=days_col, last_col=last_col)
     st.markdown(html, unsafe_allow_html=True)
 
