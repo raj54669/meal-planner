@@ -70,7 +70,7 @@ except Exception:
     HISTORY_CSV = os.environ.get("HISTORY_CSV", HISTORY_FILE)
 
 # Page config
-st.set_page_config(page_title="NextBite – Meal Planner App", page_icon="🍴", layout="centered")
+st.set_page_config(page_title="NextBite – Meal Planner App", page_icon="🍴", layout="centered", initial_sidebar_state="expanded", theme="auto")
 
 # -----------------------
 # Helpers
@@ -339,7 +339,7 @@ elif page == "Master List":
         for i, row in master_df.iterrows():
             with st.expander(f"{row['Recipe']} – {row['Item Type']}"):
                 # Edit + Delete side by side
-                col1, col2 = st.columns([1, 1])
+                col1, col2 = st.columns(2, gap="small")
                 with col1:
                     if st.button("✏️ Edit", key=f"edit_btn_{i}"):
                         st.session_state["edit_row"] = i
@@ -356,7 +356,7 @@ elif page == "Master List":
                     edit_name = st.text_input("Edit Recipe Name", value=row["Recipe"], key=f"edit_name_{i}")
                     edit_type = st.text_input("Edit Item Type", value=row["Item Type"], key=f"edit_type_{i}")
     
-                    col1, col2, col3 = st.columns([1, 1, 1])
+                    col1, col2, col3 = st.columns(3, gap="small")
                     with col1:
                         if st.button("💾 Save Edit", key=f"save_edit_{i}"):
                             master_df.at[i, "Recipe"] = edit_name
@@ -399,7 +399,7 @@ elif page == "History":
     master_df = st.session_state.master_df
     history_df = st.session_state.history_df
 
-    col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns(2, gap="small")
     with col1:
         btn_curr_month = st.button("Current Month", key="history_curr_month")
     with col2:
