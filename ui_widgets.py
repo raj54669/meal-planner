@@ -33,7 +33,7 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
         row_cells = "".join(f"<td>{'' if pd.isna(r[c]) else r[c]}</td>" for c in cols)
         tbody_rows += f"<tr>{row_cells}</tr>"
 
-    # Full HTML + CSS styling (light + dark mode)
+    # Full HTML + CSS styling (Vehicle Pricing Style + auto light/dark)
     full_html = f"""
     <div class='nb-table-wrap'>
         <table class='nb-table'>
@@ -50,29 +50,39 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
         border-collapse: collapse;
         width: 100%;
         font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-        border-radius: 6px;
-        overflow: hidden;
+        font-size: 14px;
+        font-weight: bold;
     }}
-    .nb-table th, .nb-table td {{
-        padding: 8px 10px;
-        border: 1px solid #ccc;
-        text-align: center;
-        font-size: 13px;
-    }}
-    .nb-table thead th {{
-        background: #004a99;
+    .nb-table th {{
+        background-color: #004080;  /* Dark Blue */
         color: white;
+        padding: 6px 8px;
+        text-align: center;
         font-size: 14px;
     }}
-    /* Light mode (default) */
-    @media (prefers-color-scheme: light) {{
-        .nb-table td {{ background: #fff; color: #000; }}
+    .nb-table td {{
+        background-color: #f0f4f8;  /* Light Gray-Blue */
+        color: black;
+        padding: 6px 8px;
+        text-align: center;
+        font-size: 14px;
     }}
-    /* Dark mode */
+    .nb-table, .nb-table th, .nb-table td {{
+        border: 1px solid #000;
+    }}
+    /* Dark mode override */
     @media (prefers-color-scheme: dark) {{
-        .nb-table thead th {{ background: #222; color: #eee; }}
-        .nb-table td {{ background: #1e1e1e; color: #eee; }}
-        .nb-table {{ border-color: #444; }}
+        .nb-table th {{
+            background-color: #222;
+            color: #eee;
+        }}
+        .nb-table td {{
+            background-color: #1e1e1e;
+            color: #eee;
+        }}
+        .nb-table, .nb-table th, .nb-table td {{
+            border: 1px solid #444;
+        }}
     }}
     </style>
     """
