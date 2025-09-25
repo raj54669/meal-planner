@@ -8,13 +8,13 @@ import pandas as pd
 def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str = "Last Eaten"):
     df = df.copy()
 
-    # --- Format Last Eaten column (DD-MM-YYYY) ---
+    # Format Last Eaten column (DD-MM-YYYY)
     if last_col in df.columns:
         df[last_col] = pd.to_datetime(df[last_col], errors="coerce")
         df[last_col] = df[last_col].dt.strftime("%d-%m-%Y")
         df[last_col] = df[last_col].fillna("")
 
-    # --- Format Days Ago column ---
+    # Format Days Ago column
     if days_col in df.columns:
         def fmt_days(x):
             if pd.isna(x) or x == "" or x is None:
@@ -25,19 +25,15 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
                 return str(x)
         df[days_col] = df[days_col].apply(fmt_days)
 
-    # --- Build HTML table ---
+    # Build HTML table
     cols = list(df.columns)
     thead_cells = "".join(f"<th>{c}</th>" for c in cols)
     tbody_rows = ""
     for _, r in df.iterrows():
-        row_cells = ""
-        for c in cols:
-            v = r[c] if pd.notna(r[c]) else ""
-            v = "" if v is None else v
-            row_cells += f"<td>{v}</td>"
+        row_cells = "".join(f"<td>{'' if pd.isna(r[c]) else r[c]}</td>" for c in cols)
         tbody_rows += f"<tr>{row_cells}</tr>"
 
-    # --- Full HTML + CSS styling with Light/Dark adaptation ---
+    # Full HTML + CSS styling (light + dark mode)
     full_html = f"""
     <div class='nb-table-wrap'>
         <table class='nb-table'>
@@ -53,37 +49,30 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
     .nb-table {{
         border-collapse: collapse;
         width: 100%;
-        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        border-radius: 6px;
+        overflow: hidden;
     }}
     .nb-table th, .nb-table td {{
-        padding: 6px 8px;
-        border: 1px solid #000;
+        padding: 8px 10px;
+        border: 1px solid #ccc;
         text-align: center;
-        font-weight: 600;
         font-size: 13px;
     }}
     .nb-table thead th {{
-        font-size: 14px;
-    }}
-
-    /* Light Mode */
-    [data-theme="light"] .nb-table thead th {{
         background: #004a99;
         color: white;
+        font-size: 14px;
     }}
-    [data-theme="light"] .nb-table td {{
-        background: #f9f9f9;
-        color: black;
+    /* Light mode (default) */
+    @media (prefers-color-scheme: light) {{
+        .nb-table td {{ background: #fff; color: #000; }}
     }}
-
-    /* Dark Mode */
-    [data-theme="dark"] .nb-table thead th {{
-        background: #333;
-        color: white;
-    }}
-    [data-theme="dark"] .nb-table td {{
-        background: #1e1e1e;
-        color: white;
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {{
+        .nb-table thead th {{ background: #222; color: #eee; }}
+        .nb-table td {{ background: #1e1e1e; color: #eee; }}
+        .nb-table {{ border-color: #444; }}
     }}
     </style>
     """
