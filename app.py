@@ -80,12 +80,12 @@ st.markdown("""
 
 /* ✅ MINIMAL DROPDOWN STYLING */
 .stSelectbox div[data-baseweb="select"] > div {
-    font-size: 15px !important;
+    font-size: 13px !important;
     font-weight: bold !important;
     padding-top: 2px !important;
     padding-bottom: 2px !important;
     line-height: 1 !important;
-    min-height: 24px !important;
+    min-height: 18px !important;
 }
 
 /* Adaptive color based on theme */
