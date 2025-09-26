@@ -50,7 +50,7 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
         border-collapse: collapse;
         width: 100%;
         font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: bold;
     }}
     .nb-table th {{
@@ -58,14 +58,14 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
         color: white;
         padding: 6px 8px;
         text-align: center;
-        font-size: 13px;
+        font-size: 12px;
     }}
     .nb-table td {{
         background-color: #f0f4f8;  /* Light Gray-Blue */
         color: black;
         padding: 6px 8px;
         text-align: center;
-        font-size: 13px;
+        font-size: 12px;
     }}
     .nb-table, .nb-table th, .nb-table td {{
         border: 1px solid #000;
