@@ -52,78 +52,74 @@ def apply_global_styles():
         background-color: #333 !important;
     }   /* ← this closing brace was missing */
 
-    /* 🔘 Global Button Styling */
+    /* 🌐 Global Button Styling (base: Blue theme) */
     .stButton > button, .stForm button {
         font-weight: 700 !important;
         border-radius: 6px !important;
         padding: 6px 16px !important;
         font-size: 14px !important;
-        border: 1px solid transparent !important;
+        border: 1px solid #003060 !important;
+        background-color: #004080 !important;
+        color: white !important;
         transition: background-color 0.2s ease, transform 0.1s ease;
     }
-
-    /* Hover animation */
     .stButton > button:hover {
+        background-color: #0059b3 !important;
         transform: scale(1.03);
     }
 
-    /* ✅ Add Recipe */
-    .stButton > button:has(span:contains("Add Recipe")) {
-        background-color: #2e7d32 !important; /* green */
+    /* 🎯 Per-button overrides using keys */
+    /* Add Recipe */
+    div[data-testid="stButton"][data-baseweb][data-testid-button-key="add_recipe"] > button {
+        background-color: #2e7d32 !important;
         border-color: #1b5e20 !important;
-        color: white !important;
     }
-    .stButton > button:has(span:contains("Add Recipe")):hover {
+    div[data-testid="stButton"][data-baseweb][data-testid-button-key="add_recipe"] > button:hover {
         background-color: #1b5e20 !important;
     }
 
-    /* ✏️ Edit */
-    .stButton > button:has(span:contains("Edit")) {
-        background-color: #1565c0 !important; /* blue */
+    /* Edit */
+    div[data-testid="stButton"][data-testid-button-key^="edit_"] > button {
+        background-color: #1565c0 !important;
         border-color: #0d47a1 !important;
-        color: white !important;
     }
-    .stButton > button:has(span:contains("Edit")):hover {
+    div[data-testid="stButton"][data-testid-button-key^="edit_"] > button:hover {
         background-color: #0d47a1 !important;
     }
 
-    /* 🗑️ Delete */
-    .stButton > button:has(span:contains("Delete")) {
-        background-color: #c62828 !important; /* red */
+    /* Delete */
+    div[data-testid="stButton"][data-testid-button-key^="delete_"] > button {
+        background-color: #c62828 !important;
         border-color: #8e0000 !important;
-        color: white !important;
     }
-    .stButton > button:has(span:contains("Delete")):hover {
+    div[data-testid="stButton"][data-testid-button-key^="delete_"] > button:hover {
         background-color: #b71c1c !important;
     }
 
-    /* 💾 Save Edit */
-    .stButton > button:has(span:contains("Save Edit")) {
-        background-color: #2e7d32 !important; /* dark green */
+    /* Save Edit */
+    div[data-testid="stButton"][data-testid-button-key="save_edit"] > button {
+        background-color: #2e7d32 !important;
         border-color: #1b5e20 !important;
-        color: white !important;
     }
-    .stButton > button:has(span:contains("Save Edit")):hover {
+    div[data-testid="stButton"][data-testid-button-key="save_edit"] > button:hover {
         background-color: #1b5e20 !important;
     }
 
-    /* ↩️ Cancel + Cancel Delete (orange/yellow) */
-    .stButton > button:has(span:contains("Cancel")) {
-        background-color: #f57c00 !important; /* orange */
+    /* Cancel + Cancel Delete */
+    div[data-testid="stButton"][data-testid-button-key*="cancel"] > button {
+        background-color: #f57c00 !important;
         border-color: #ef6c00 !important;
-        color: white !important;
     }
-    .stButton > button:has(span:contains("Cancel")):hover {
-        background-color: #ef6c00 !important; /* darker orange */
+    div[data-testid="stButton"][data-testid-button-key*="cancel"] > button:hover {
+        background-color: #ef6c00 !important;
     }
 
-    /* ⚠️ Confirm Delete */
-    .stButton > button:has(span:contains("Confirm Delete")) {
-        background-color: #d32f2f !important; /* strong red */
+    /* Confirm Delete */
+    div[data-testid="stButton"][data-testid-button-key="confirm_delete"] > button {
+        background-color: #d32f2f !important;
         border-color: #b71c1c !important;
-        color: white !important;
     }
-    .stButton > button:has(span:contains("Confirm Delete")):hover {
+    div[data-testid="stButton"][data-testid-button-key="confirm_delete"] > button:hover {
         background-color: #b71c1c !important;
     }
 
