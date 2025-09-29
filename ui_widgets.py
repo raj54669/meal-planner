@@ -2,6 +2,52 @@
 import streamlit as st
 import pandas as pd
 
+
+def apply_global_styles():
+    """Inject global CSS for dropdowns, labels, and other UI elements."""
+    st.markdown("""
+    <style>
+    .stSelectbox label {
+        font-size: 15px !important;
+        font-weight: 600 !important;
+    }
+
+    /* ✅ MINIMAL DROPDOWN STYLING */
+    .stSelectbox div[data-baseweb="select"] > div {
+        font-size: 15px !important;
+        font-weight: bold !important;
+        padding-top: 2px !important;
+        padding-bottom: 6px !important;
+        line-height: 1 !important;
+        min-height: 12px !important;
+    }
+
+    .stSelectbox div[data-baseweb="select"] {
+        align-items: center !important;
+        height: 28px !important;
+    }
+
+    .stSelectbox [data-baseweb="option"]:hover {
+        background-color: #e0e0e0 !important;
+        font-weight: 600 !important;
+    }
+
+    /* Light mode styling */
+    [data-theme="light"] .stSelectbox div[data-baseweb="select"] > div {
+        color: black !important;
+        background-color: #f3f4f6 !important; /* Light background */
+        font-weight: bold !important;
+    }
+
+    /* Dark mode styling */
+    [data-theme="dark"] .stSelectbox div[data-baseweb="select"] > div {
+        color: white !important;
+        background-color: #333 !important; /* Dark background */
+        font-weight: bold !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # -----------------------
 # Original table functions (fixed to always render HTML)
 # -----------------------
