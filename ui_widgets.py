@@ -51,24 +51,21 @@ def apply_global_styles():
         color: white !important;
         background-color: #333 !important;
 
-        <style>
-    /* Style all st.button */
-    .stButton button {
-        font-weight: 700 !important;       /* bold text */
-        background-color: #004080 !important;  /* dark blue background */
-        color: white !important;           /* white text */
-        border-radius: 8px !important;     /* rounded corners */
+    /* Target ALL Streamlit buttons */
+    div.stButton > button:first-child {
+        font-weight: 700 !important;       /* Bold text */
+        background-color: #004080 !important;  /* Dark blue */
+        color: white !important;           /* White text */
+        border-radius: 6px !important;     /* Rounded corners */
         border: 1px solid #003060 !important;
-        padding: 6px 14px !important;
+        padding: 6px 16px !important;
         font-size: 14px !important;
-        cursor: pointer !important;
     }
 
     /* Hover effect */
-    .stButton button:hover {
-        background-color: #0059b3 !important;  /* lighter blue on hover */
+    div.stButton > button:first-child:hover {
+        background-color: #0059b3 !important;  /* Lighter blue on hover */
         border-color: #004080 !important;
-    
     }
     </style>
     """, unsafe_allow_html=True)
