@@ -380,13 +380,13 @@ elif page == "Master List":
                 # Confirm delete mode
                 if st.session_state.get("delete_row") == i:
                     st.warning(f"Confirm delete '{row['Recipe']}'?")
-                    if st.button("Confirm Delete", key=f"confirm_del_{i}"):
+                    if st.button("🗑️ Confirm Delete", key=f"confirm_del_{i}"):
                         new_master = master_df.drop(i).reset_index(drop=True)
                         st.session_state.master_df = try_save_master_list(new_master) or master_df
                         st.success("🗑️ Recipe deleted live!")
                         st.session_state["delete_row"] = None
                         safe_rerun()
-                    if st.button("Cancel Delete", key=f"cancel_del_{i}"):
+                    if st.button("❌ Cancel Delete", key=f"cancel_del_{i}"):
                         st.session_state["delete_row"] = None
                         safe_rerun()
 
@@ -453,7 +453,7 @@ elif page == "History":
             display_table(filtered[["Date", "Recipe", "Item Type", "Days Ago"]])
 
 
-        if st.button("Remove Today's Entry (if exists)"):
+        if st.button("🗑️ Remove Today's Entry (if exists)"):
             try:
                 new_hist = history_df[history_df["Date"].dt.date != date.today()].reset_index(drop=True)
                 st.session_state.history_df = try_save_history(new_hist)
