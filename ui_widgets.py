@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def apply_global_styles():
-    """Inject global CSS for dropdowns, labels, and other UI elements."""
+    """Inject global CSS for dropdowns, labels, buttons, and other UI elements."""
     st.markdown("""
     <style>
     /* Label styling */
@@ -50,9 +50,10 @@ def apply_global_styles():
     [data-theme="dark"] .stSelectbox div[data-baseweb="select"] > div {
         color: white !important;
         background-color: #333 !important;
+    }   /* ← this closing brace was missing */
 
-    /* Stronger targeting for ALL st.button elements */
-    button[kind="primary"], div.stButton > button, .stButton button {
+    /* ✅ Button styling */
+    div.stButton > button:first-child {
         font-weight: 700 !important;       /* bold text */
         background-color: #004080 !important;  /* dark blue */
         color: white !important;           /* white text */
@@ -63,7 +64,7 @@ def apply_global_styles():
     }
 
     /* Hover effect */
-    button[kind="primary"]:hover, div.stButton > button:hover, .stButton button:hover {
+    div.stButton > button:first-child:hover {
         background-color: #0059b3 !important;  /* lighter blue */
         border-color: #004080 !important;
     }
