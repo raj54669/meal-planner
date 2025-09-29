@@ -52,8 +52,7 @@ def apply_global_styles():
         background-color: #333 !important;
     }   /* ← this closing brace was missing */
 
-    /* ✅ Button styling */
-    div.stButton > button:first-child {
+    .stButton > button, .stForm button {
         font-weight: 700 !important;       /* bold text */
         background-color: #004080 !important;  /* dark blue */
         color: white !important;           /* white text */
@@ -62,12 +61,13 @@ def apply_global_styles():
         padding: 6px 16px !important;
         font-size: 14px !important;
     }
-
+    
     /* Hover effect */
-    div.stButton > button:first-child:hover {
+    .stButton > button:hover, .stForm button:hover {
         background-color: #0059b3 !important;  /* lighter blue */
         border-color: #004080 !important;
     }
+    
     </style>
     """, unsafe_allow_html=True)
 
