@@ -51,20 +51,20 @@ def apply_global_styles():
         color: white !important;
         background-color: #333 !important;
 
-    /* Target ALL Streamlit buttons */
-    div.stButton > button:first-child {
-        font-weight: 700 !important;       /* Bold text */
-        background-color: #004080 !important;  /* Dark blue */
-        color: white !important;           /* White text */
-        border-radius: 6px !important;     /* Rounded corners */
+    /* Stronger targeting for ALL st.button elements */
+    button[kind="primary"], div.stButton > button, .stButton button {
+        font-weight: 700 !important;       /* bold text */
+        background-color: #004080 !important;  /* dark blue */
+        color: white !important;           /* white text */
+        border-radius: 6px !important;     /* rounded corners */
         border: 1px solid #003060 !important;
         padding: 6px 16px !important;
         font-size: 14px !important;
     }
 
     /* Hover effect */
-    div.stButton > button:first-child:hover {
-        background-color: #0059b3 !important;  /* Lighter blue on hover */
+    button[kind="primary"]:hover, div.stButton > button:hover, .stButton button:hover {
+        background-color: #0059b3 !important;  /* lighter blue */
         border-color: #004080 !important;
     }
     </style>
