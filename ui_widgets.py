@@ -52,77 +52,96 @@ def apply_global_styles():
         background-color: #333 !important;
     }   /* ← this closing brace was missing */
 
-    /* 🌐 Global Button Styling (base: Blue theme) */
+    /* 🌐 Base Button Style */
     .stButton > button, .stForm button {
-        font-weight: 700 !important;
-        border-radius: 6px !important;
-        padding: 6px 16px !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        padding: 8px 18px !important;
         font-size: 14px !important;
-        border: 1px solid #003060 !important;
-        background-color: #004080 !important;
-        color: white !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        border: 1px solid transparent !important;
         transition: background-color 0.2s ease, transform 0.1s ease;
     }
-    .stButton > button:hover {
-        background-color: #0059b3 !important;
-        transform: scale(1.03);
+    .stButton > button:hover, .stForm button:hover {
+        transform: scale(1.04);
+        filter: brightness(1.05);
     }
-
-    /* 🎯 Per-button overrides using keys */
-    /* Add Recipe */
-    div[data-testid="stButton"][data-baseweb][data-testid-button-key="add_recipe"] > button {
+    
+    /* 🎯 Add Recipe */
+    div[data-testid="stButton"][data-testid-button-key="add_recipe"] button {
         background-color: #2e7d32 !important;
         border-color: #1b5e20 !important;
     }
-    div[data-testid="stButton"][data-baseweb][data-testid-button-key="add_recipe"] > button:hover {
+    div[data-testid="stButton"][data-testid-button-key="add_recipe"] button::before {
+        content: "➕";
+    }
+    div[data-testid="stButton"][data-testid-button-key="add_recipe"] button:hover {
         background-color: #1b5e20 !important;
     }
-
-    /* Edit */
-    div[data-testid="stButton"][data-testid-button-key^="edit_"] > button {
+    
+    /* 🎯 Edit */
+    div[data-testid="stButton"][data-testid-button-key^="edit_"] button {
         background-color: #1565c0 !important;
         border-color: #0d47a1 !important;
     }
-    div[data-testid="stButton"][data-testid-button-key^="edit_"] > button:hover {
+    div[data-testid="stButton"][data-testid-button-key^="edit_"] button::before {
+        content: "✏️";
+    }
+    div[data-testid="stButton"][data-testid-button-key^="edit_"] button:hover {
         background-color: #0d47a1 !important;
     }
-
-    /* Delete */
-    div[data-testid="stButton"][data-testid-button-key^="delete_"] > button {
+    
+    /* 🎯 Delete */
+    div[data-testid="stButton"][data-testid-button-key^="delete_"] button {
         background-color: #c62828 !important;
         border-color: #8e0000 !important;
     }
-    div[data-testid="stButton"][data-testid-button-key^="delete_"] > button:hover {
+    div[data-testid="stButton"][data-testid-button-key^="delete_"] button::before {
+        content: "🗑️";
+    }
+    div[data-testid="stButton"][data-testid-button-key^="delete_"] button:hover {
         background-color: #b71c1c !important;
     }
-
-    /* Save Edit */
-    div[data-testid="stButton"][data-testid-button-key="save_edit"] > button {
+    
+    /* 🎯 Save Edit */
+    div[data-testid="stButton"][data-testid-button-key="save_edit"] button {
         background-color: #2e7d32 !important;
         border-color: #1b5e20 !important;
     }
-    div[data-testid="stButton"][data-testid-button-key="save_edit"] > button:hover {
+    div[data-testid="stButton"][data-testid-button-key="save_edit"] button::before {
+        content: "💾";
+    }
+    div[data-testid="stButton"][data-testid-button-key="save_edit"] button:hover {
         background-color: #1b5e20 !important;
     }
-
-    /* Cancel + Cancel Delete */
-    div[data-testid="stButton"][data-testid-button-key*="cancel"] > button {
-        background-color: #f57c00 !important;
-        border-color: #ef6c00 !important;
+    
+    /* 🎯 Cancel (lighter yellow-orange, safe action) */
+    div[data-testid="stButton"][data-testid-button-key*="cancel"] button {
+        background-color: #ffb300 !important;   /* amber */
+        border-color: #fb8c00 !important;
+        color: black !important;
     }
-    div[data-testid="stButton"][data-testid-button-key*="cancel"] > button:hover {
-        background-color: #ef6c00 !important;
+    div[data-testid="stButton"][data-testid-button-key*="cancel"] button::before {
+        content: "❌";
     }
-
-    /* Confirm Delete */
-    div[data-testid="stButton"][data-testid-button-key="confirm_delete"] > button {
+    div[data-testid="stButton"][data-testid-button-key*="cancel"] button:hover {
+        background-color: #fb8c00 !important;
+    }
+    
+    /* 🎯 Confirm Delete (strong warning red) */
+    div[data-testid="stButton"][data-testid-button-key="confirm_delete"] button {
         background-color: #d32f2f !important;
         border-color: #b71c1c !important;
     }
-    div[data-testid="stButton"][data-testid-button-key="confirm_delete"] > button:hover {
+    div[data-testid="stButton"][data-testid-button-key="confirm_delete"] button::before {
+        content: "⚠️";
+    }
+    div[data-testid="stButton"][data-testid-button-key="confirm_delete"] button:hover {
         background-color: #b71c1c !important;
     }
-
     
     </style>
     """, unsafe_allow_html=True)
