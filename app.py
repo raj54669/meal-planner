@@ -83,7 +83,7 @@ st.markdown("""
     font-size: 15px !important;
     font-weight: bold !important;
     padding-top: 2px !important;
-    padding-bottom: 2px !important;
+    padding-bottom: 6px !important;
     line-height: 1 !important;
     min-height: 12px !important;
 }
