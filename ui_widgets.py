@@ -70,20 +70,7 @@ def df_to_html_table(df: pd.DataFrame, days_col: str = "Days Ago", last_col: str
     .nb-table, .nb-table th, .nb-table td {{
         border: 1px solid #000;
     }}
-    /* Dark mode override */
-    @media (prefers-color-scheme: dark) {{
-        .nb-table th {{
-            background-color: #222;
-            color: #eee;
-        }}
-        .nb-table td {{
-            background-color: #1e1e1e;
-            color: #eee;
-        }}
-        .nb-table, .nb-table th, .nb-table td {{
-            border: 1px solid #444;
-        }}
-    }}
+
     </style>
     """
     return full_html
