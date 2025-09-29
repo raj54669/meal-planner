@@ -52,21 +52,81 @@ def apply_global_styles():
         background-color: #333 !important;
     }   /* ← this closing brace was missing */
 
+    /* 🔘 Global Button Styling */
     .stButton > button, .stForm button {
-        font-weight: 700 !important;       /* bold text */
-        background-color: #004080 !important;  /* dark blue */
-        color: white !important;           /* white text */
-        border-radius: 6px !important;     /* rounded corners */
-        border: 1px solid #003060 !important;
+        font-weight: 700 !important;
+        border-radius: 6px !important;
         padding: 6px 16px !important;
         font-size: 14px !important;
+        border: 1px solid transparent !important;
+        transition: background-color 0.2s ease, transform 0.1s ease;
     }
-    
-    /* Hover effect */
-    .stButton > button:hover, .stForm button:hover {
-        background-color: #0059b3 !important;  /* lighter blue */
-        border-color: #004080 !important;
+
+    /* Hover animation */
+    .stButton > button:hover {
+        transform: scale(1.03);
     }
+
+    /* ✅ Add Recipe */
+    .stButton > button:has(span:contains("Add Recipe")) {
+        background-color: #2e7d32 !important; /* green */
+        border-color: #1b5e20 !important;
+        color: white !important;
+    }
+    .stButton > button:has(span:contains("Add Recipe")):hover {
+        background-color: #1b5e20 !important;
+    }
+
+    /* ✏️ Edit */
+    .stButton > button:has(span:contains("Edit")) {
+        background-color: #1565c0 !important; /* blue */
+        border-color: #0d47a1 !important;
+        color: white !important;
+    }
+    .stButton > button:has(span:contains("Edit")):hover {
+        background-color: #0d47a1 !important;
+    }
+
+    /* 🗑️ Delete */
+    .stButton > button:has(span:contains("Delete")) {
+        background-color: #c62828 !important; /* red */
+        border-color: #8e0000 !important;
+        color: white !important;
+    }
+    .stButton > button:has(span:contains("Delete")):hover {
+        background-color: #b71c1c !important;
+    }
+
+    /* 💾 Save Edit */
+    .stButton > button:has(span:contains("Save Edit")) {
+        background-color: #2e7d32 !important; /* dark green */
+        border-color: #1b5e20 !important;
+        color: white !important;
+    }
+    .stButton > button:has(span:contains("Save Edit")):hover {
+        background-color: #1b5e20 !important;
+    }
+
+    /* ↩️ Cancel + Cancel Delete (orange/yellow) */
+    .stButton > button:has(span:contains("Cancel")) {
+        background-color: #f57c00 !important; /* orange */
+        border-color: #ef6c00 !important;
+        color: white !important;
+    }
+    .stButton > button:has(span:contains("Cancel")):hover {
+        background-color: #ef6c00 !important; /* darker orange */
+    }
+
+    /* ⚠️ Confirm Delete */
+    .stButton > button:has(span:contains("Confirm Delete")) {
+        background-color: #d32f2f !important; /* strong red */
+        border-color: #b71c1c !important;
+        color: white !important;
+    }
+    .stButton > button:has(span:contains("Confirm Delete")):hover {
+        background-color: #b71c1c !important;
+    }
+
     
     </style>
     """, unsafe_allow_html=True)
