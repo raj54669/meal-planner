@@ -52,96 +52,53 @@ def apply_global_styles():
         background-color: #333 !important;
     }   /* ← this closing brace was missing */
 
-    /* 🌐 Base Button Style */
+    /* 🔵 Base Style (keep your working blue buttons) */
     .stButton > button, .stForm button {
-        font-weight: 600 !important;
-        border-radius: 8px !important;
-        padding: 8px 18px !important;
+        font-weight: 700 !important;
+        background-color: #004080 !important;  /* Dark Blue */
+        color: white !important;
+        border-radius: 6px !important;
+        border: 1px solid #003060 !important;
+        padding: 6px 16px !important;
         font-size: 14px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 6px !important;
-        border: 1px solid transparent !important;
         transition: background-color 0.2s ease, transform 0.1s ease;
     }
     .stButton > button:hover, .stForm button:hover {
-        transform: scale(1.04);
-        filter: brightness(1.05);
+        background-color: #0059b3 !important;
+        border-color: #004080 !important;
+        transform: scale(1.03);
     }
     
-    /* 🎯 Add Recipe */
-    div[data-testid="stButton"][data-testid-button-key="add_recipe"] button {
-        background-color: #2e7d32 !important;
-        border-color: #1b5e20 !important;
-    }
-    div[data-testid="stButton"][data-testid-button-key="add_recipe"] button::before {
-        content: "➕";
-    }
-    div[data-testid="stButton"][data-testid-button-key="add_recipe"] button:hover {
-        background-color: #1b5e20 !important;
-    }
-    
-    /* 🎯 Edit */
-    div[data-testid="stButton"][data-testid-button-key^="edit_"] button {
-        background-color: #1565c0 !important;
-        border-color: #0d47a1 !important;
-    }
-    div[data-testid="stButton"][data-testid-button-key^="edit_"] button::before {
-        content: "✏️";
-    }
-    div[data-testid="stButton"][data-testid-button-key^="edit_"] button:hover {
-        background-color: #0d47a1 !important;
-    }
-    
-    /* 🎯 Delete */
-    div[data-testid="stButton"][data-testid-button-key^="delete_"] button {
-        background-color: #c62828 !important;
-        border-color: #8e0000 !important;
-    }
-    div[data-testid="stButton"][data-testid-button-key^="delete_"] button::before {
-        content: "🗑️";
-    }
-    div[data-testid="stButton"][data-testid-button-key^="delete_"] button:hover {
-        background-color: #b71c1c !important;
-    }
-    
-    /* 🎯 Save Edit */
+    /* ✅ Save Edit (green) */
     div[data-testid="stButton"][data-testid-button-key="save_edit"] button {
         background-color: #2e7d32 !important;
         border-color: #1b5e20 !important;
-    }
-    div[data-testid="stButton"][data-testid-button-key="save_edit"] button::before {
-        content: "💾";
     }
     div[data-testid="stButton"][data-testid-button-key="save_edit"] button:hover {
         background-color: #1b5e20 !important;
     }
     
-    /* 🎯 Cancel (lighter yellow-orange, safe action) */
+    /* ⚠️ Cancel (yellow-orange, safe) */
     div[data-testid="stButton"][data-testid-button-key*="cancel"] button {
-        background-color: #ffb300 !important;   /* amber */
+        background-color: #ffb300 !important;  /* amber */
         border-color: #fb8c00 !important;
         color: black !important;
-    }
-    div[data-testid="stButton"][data-testid-button-key*="cancel"] button::before {
-        content: "❌";
     }
     div[data-testid="stButton"][data-testid-button-key*="cancel"] button:hover {
         background-color: #fb8c00 !important;
     }
     
-    /* 🎯 Confirm Delete (strong warning red) */
+    /* 🗑️ Delete + Confirm Delete (red, dangerous) */
+    div[data-testid="stButton"][data-testid-button-key^="delete_"] button,
     div[data-testid="stButton"][data-testid-button-key="confirm_delete"] button {
-        background-color: #d32f2f !important;
-        border-color: #b71c1c !important;
+        background-color: #c62828 !important;
+        border-color: #8e0000 !important;
     }
-    div[data-testid="stButton"][data-testid-button-key="confirm_delete"] button::before {
-        content: "⚠️";
-    }
+    div[data-testid="stButton"][data-testid-button-key^="delete_"] button:hover,
     div[data-testid="stButton"][data-testid-button-key="confirm_delete"] button:hover {
         background-color: #b71c1c !important;
     }
+
     
     </style>
     """, unsafe_allow_html=True)
