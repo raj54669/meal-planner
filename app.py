@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import date, timedelta
 import os
 from github import Github
-from ui_widgets import display_table, recipe_card
+from ui_widgets import display_table, recipe_card, apply_global_styles
 import data_manager as dm
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -69,64 +69,7 @@ except Exception:
     MASTER_CSV = os.environ.get("MASTER_CSV", MASTER_LIST_FILE)
     HISTORY_CSV = os.environ.get("HISTORY_CSV", HISTORY_FILE)
 
-# --- Global Styling ---
-st.markdown("""
-<style>
-
-.stSelectbox label {
-    font-size: 15px !important;
-    font-weight: 600 !important;
-}
-
-/* ✅ MINIMAL DROPDOWN STYLING */
-.stSelectbox div[data-baseweb="select"] > div {
-    font-size: 15px !important;
-    font-weight: bold !important;
-    padding-top: 2px !important;
-    padding-bottom: 6px !important;
-    line-height: 1 !important;
-    min-height: 12px !important;
-}
-
-/* Adaptive color based on theme */
-[data-theme="light"] .stSelectbox div[data-baseweb="select"] > div {
-    color: black !important;
-    background-color: #f3f4f6 !important;
-}
-[data-theme="dark"] .stSelectbox div[data-baseweb="select"] > div {
-    color: white !important;
-    background-color: #333 !important;
-}
-.stSelectbox div[data-baseweb="select"] {
-    align-items: center !important;
-    height: 28px !important;
-}
-
-.stSelectbox [data-baseweb="option"]:hover {
-    background-color: #f0f0f0 !important;
-    font-weight: 600 !important;
-}
-/* Light mode styling */
-[data-theme="light"] .stSelectbox div[data-baseweb="select"] > div {
-    color: black !important;
-    background-color: #f3f4f6 !important; /* Light background */
-    font-weight: bold !important;
-}
-
-/* Dark mode styling */
-[data-theme="dark"] .stSelectbox div[data-baseweb="select"] > div {
-    color: white !important;
-    background-color: #333 !important; /* Dark background */
-    font-weight: bold !important;
-}
-
-/* Hover styling for options (common to both) */
-.stSelectbox [data-baseweb="option"]:hover {
-    background-color: #e0e0e0 !important;
-    font-weight: 600 !important;
-}
-</style>
-""", unsafe_allow_html=True)
+apply_global_styles()
 
 # Page config
 st.set_page_config(page_title="NextBite – Meal Planner App", page_icon="🍴", layout="centered")
