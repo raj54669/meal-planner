@@ -52,54 +52,35 @@ def apply_global_styles():
         background-color: #333 !important;
     }   /* ← this closing brace was missing */
 
-    /* 🔵 Base Style (keep your working blue buttons) */
-    .stButton > button, .stForm button {
+    /* -------- Simple, single blue style for ALL buttons (including form buttons) -------- */
+    /* This ensures uniform blue buttons: Add, Edit, Delete, Save, Cancel, etc. */
+    .stButton > button,
+    .stForm button,
+    div[data-testid="stButton"] button {
         font-weight: 700 !important;
-        background-color: #004080 !important;  /* Dark Blue */
-        color: white !important;
+        background-color: #004080 !important;   /* base blue */
+        color: #ffffff !important;
         border-radius: 6px !important;
         border: 1px solid #003060 !important;
-        padding: 6px 16px !important;
+        padding: 6px 14px !important;
         font-size: 14px !important;
-        transition: background-color 0.2s ease, transform 0.1s ease;
-    }
-    .stButton > button:hover, .stForm button:hover {
-        background-color: #0059b3 !important;
-        border-color: #004080 !important;
-        transform: scale(1.03);
-    }
-    
-    /* ✅ Save Edit (green) */
-    div[data-testid="stButton"][data-testid-button-key="save_edit"] button {
-        background-color: #2e7d32 !important;
-        border-color: #1b5e20 !important;
-    }
-    div[data-testid="stButton"][data-testid-button-key="save_edit"] button:hover {
-        background-color: #1b5e20 !important;
-    }
-    
-    /* ⚠️ Cancel (yellow-orange, safe) */
-    div[data-testid="stButton"][data-testid-button-key*="cancel"] button {
-        background-color: #ffb300 !important;  /* amber */
-        border-color: #fb8c00 !important;
-        color: black !important;
-    }
-    div[data-testid="stButton"][data-testid-button-key*="cancel"] button:hover {
-        background-color: #fb8c00 !important;
-    }
-    
-    /* 🗑️ Delete + Confirm Delete (red, dangerous) */
-    div[data-testid="stButton"][data-testid-button-key^="delete_"] button,
-    div[data-testid="stButton"][data-testid-button-key="confirm_delete"] button {
-        background-color: #c62828 !important;
-        border-color: #8e0000 !important;
-    }
-    div[data-testid="stButton"][data-testid-button-key^="delete_"] button:hover,
-    div[data-testid="stButton"][data-testid-button-key="confirm_delete"] button:hover {
-        background-color: #b71c1c !important;
+        transition: background-color 0.15s ease, transform 0.08s ease, box-shadow 0.12s ease;
+        box-shadow: none !important;
     }
 
-    
+    /* hover / focus */
+    .stButton > button:hover,
+    .stForm button:hover,
+    div[data-testid="stButton"] button:hover {
+        background-color: #0059b3 !important;   /* hover blue */
+        transform: translateY(-1px) !important;
+    }
+    .stButton > button:focus,
+    .stForm button:focus,
+    div[data-testid="stButton"] button:focus {
+        outline: none !important;
+        box-shadow: 0 0 0 4px rgba(0,80,128,0.12) !important;
+    }    
     </style>
     """, unsafe_allow_html=True)
 
