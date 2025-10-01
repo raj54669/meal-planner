@@ -98,7 +98,8 @@ def save_today_pick(recipe, item_type="", repo=None, branch="main", filename="hi
 
 # ---------- Delete Today ----------
 def delete_today_pick(today_str=None, repo=None, branch="main", filename="history.csv"):
-    """Delete today's recipe entry from history if it exists."""
+    """Delete today's recipe entry from history if it exists. 
+    If no entry exists, just return history unchanged."""
     if today_str is None:
         today = datetime.today().date()
     else:
@@ -108,7 +109,13 @@ def delete_today_pick(today_str=None, repo=None, branch="main", filename="histor
     history = load_history(repo, branch, filename)
     history["Date"] = pd.to_datetime(history["Date"], errors="coerce")
 
-    # Remove only today's entries
+    # Check if today's entry exists
+    today_entries = history[history["Date"].dt.date == today]
+    if today_entries.empty:
+        # ✅ No recipe saved today → just return unchanged
+        return history
+
+    # Remove today's entries
     updated = history[history["Date"].dt.date != today].reset_index(drop=True)
 
     # Ensure Date is datetime
@@ -128,6 +135,7 @@ def delete_today_pick(today_str=None, repo=None, branch="main", filename="histor
         atomic_save(updated, filename)
 
     return updated
+
     
 # ---------- Add to Master ----------
 def add_recipe_to_master(recipe, item_type, repo=None, branch="main", filename="master_list.csv"):
