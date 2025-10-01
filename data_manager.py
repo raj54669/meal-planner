@@ -52,17 +52,36 @@ def load_history(repo=None, branch="main", filename="history.csv"):
 
 # ---------- Save Today’s Pick ----------
 def save_today_pick(recipe, item_type="", repo=None, branch="main", filename="history.csv"):
-    today = datetime.today().strftime("%Y-%m-%d")
-    new_row = pd.DataFrame([{"Date": today, "Recipe": recipe, "Item Type": item_type}])
+    """Save today's recipe into history with duplicate protection."""
+    today = datetime.today().date()
 
+    # Load history
     history = load_history(repo, branch, filename)
-    # Remove any existing row for today
-    history = history[history["Date"].dt.strftime("%Y-%m-%d") != today]
+    history["Date"] = pd.to_datetime(history["Date"], errors="coerce")
+
+    # Find today's entries
+    today_entries = history[history["Date"].dt.date == today]
+
+    if not today_entries.empty:
+        if today_entries.iloc[0]["Recipe"] == recipe:
+            # ✅ Same recipe already saved → do nothing
+            return history
+        else:
+            # 🔄 Different recipe exists → remove it before saving new
+            history = history[history["Date"].dt.date != today].reset_index(drop=True)
+
+    # Add today's recipe (new or replacement)
+    new_row = pd.DataFrame([{
+        "Date": today.strftime("%Y-%m-%d"),
+        "Recipe": recipe,
+        "Item Type": item_type
+    }])
     updated = pd.concat([history, new_row], ignore_index=True)
 
-    # 🔑 Ensure Date is datetime
+    # Ensure Date is datetime
     updated["Date"] = pd.to_datetime(updated["Date"], errors="coerce")
 
+    # Save back to GitHub or local
     if repo:
         file = repo.get_contents(filename, ref=branch)
         repo.update_file(
@@ -79,20 +98,28 @@ def save_today_pick(recipe, item_type="", repo=None, branch="main", filename="hi
 
 # ---------- Delete Today ----------
 def delete_today_pick(today_str=None, repo=None, branch="main", filename="history.csv"):
+    """Delete today's recipe entry from history if it exists."""
     if today_str is None:
-        today_str = datetime.today().strftime("%Y-%m-%d")
+        today = datetime.today().date()
+    else:
+        today = pd.to_datetime(today_str, errors="coerce").date()
 
+    # Load history
     history = load_history(repo, branch, filename)
-    updated = history[history["Date"].dt.strftime("%Y-%m-%d") != today_str].reset_index(drop=True)
+    history["Date"] = pd.to_datetime(history["Date"], errors="coerce")
 
-    # 🔑 Ensure Date is datetime
+    # Remove only today's entries
+    updated = history[history["Date"].dt.date != today].reset_index(drop=True)
+
+    # Ensure Date is datetime
     updated["Date"] = pd.to_datetime(updated["Date"], errors="coerce")
 
+    # Save back
     if repo:
         file = repo.get_contents(filename, ref=branch)
         repo.update_file(
             file.path,
-            f"Delete today {today_str}",
+            f"Delete today's entry {today}",
             updated.to_csv(index=False),
             file.sha,
             branch=branch
@@ -101,7 +128,7 @@ def delete_today_pick(today_str=None, repo=None, branch="main", filename="histor
         atomic_save(updated, filename)
 
     return updated
-
+    
 # ---------- Add to Master ----------
 def add_recipe_to_master(recipe, item_type, repo=None, branch="main", filename="master_list.csv"):
     new_row = pd.DataFrame([{"Recipe": recipe, "Item Type": item_type}])
