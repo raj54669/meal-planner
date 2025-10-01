@@ -243,14 +243,14 @@ if page == "Pick Today’s Recipe":
                     recipe_choice = st.radio("Select recipe to save for today", choices, key="bytype_choice")
                     if st.button("Save Today's Pick (By Type)"):
                         try:
-                            st.session_state.history_df = save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
-                            # Ensure Date is datetime
-                            st.session_state.history_df["Date"] = pd.to_datetime(st.session_state.history_df["Date"], errors="coerce")
+                            updated = save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+                            st.session_state.history_df = updated
                             st.cache_data.clear()
                             st.success(f"✅ Saved **{recipe_choice}** and updated live!")
                             safe_rerun()
                         except Exception as e:
                             st.error(f"Failed to save history: {e}")
+
 
     else:
         if recommend:
@@ -273,19 +273,19 @@ if page == "Pick Today’s Recipe":
             if choices:
                 recipe_choice = st.radio("Select recipe to save for today", choices, key="suggest_choice")
                 if st.button("Save Today's Pick (Suggestion)"):
-
+                
                     chosen_row = rec_df[rec_df["Recipe"] == recipe_choice].iloc[0].to_dict()
                     item_type = chosen_row.get("Item Type", "")
-                    new_row = {"Date": today.strftime("%Y-%m-%d"), "Recipe": recipe_choice, "Item Type": item_type}
-                    new_history = pd.concat([history_df, pd.DataFrame([new_row])], ignore_index=True)
-                    # Ensure Date is datetime
-                    new_history["Date"] = pd.to_datetime(new_history["Date"], errors="coerce")
-                    
-                    result = try_save_history(new_history)
-                    st.session_state.history_df = result if result is not None else history_df
-                    st.success(f"✅ Saved **{recipe_choice}** and updated live!")
-                    st.cache_data.clear()
-                    safe_rerun()
+                
+                    try:
+                        updated = save_today_pick(recipe_choice, item_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+                        st.session_state.history_df = updated
+                        st.cache_data.clear()
+                        st.success(f"✅ Saved **{recipe_choice}** and updated live!")
+                        safe_rerun()
+                    except Exception as e:
+                        st.error(f"Failed to save history: {e}")
+
                     
 # -----------------------
 # MASTER LIST
@@ -455,11 +455,13 @@ elif page == "History":
 
         if st.button("🗑️ Remove Today's Entry (if exists)"):
             try:
-                new_hist = history_df[history_df["Date"].dt.date != date.today()].reset_index(drop=True)
-                st.session_state.history_df = try_save_history(new_hist)
+                updated = delete_today_pick(repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+                st.session_state.history_df = updated
+                st.cache_data.clear()
                 st.success("🗑️ Removed today’s entry live!")
                 safe_rerun()
-            except Exception:
-                st.error("Unable to remove today's entry. Check history data format.")
+            except Exception as e:
+                st.error(f"Failed to remove today's entry: {e}")
+
     else:
         st.info("History is empty.")
