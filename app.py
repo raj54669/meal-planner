@@ -244,31 +244,33 @@ if page == "Pick Today’s Recipe":
                     if st.button("Save Today's Pick (By Type)"):
                         try:
                             hist = st.session_state.history_df.copy()
-                            today_entries = hist[hist["Date"].dt.date == today]
+                            hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce").dt.date
                     
-                            # Case 1: Already same recipe today → skip
-                            if not today_entries.empty and today_entries.iloc[0]["Recipe"] == recipe_choice:
-                                st.info(f"ℹ️ **{recipe_choice}** is already selected for today.")
+                            today_entries = hist[hist["Date"] == today]
                     
+                            if not today_entries.empty:
+                                current_recipe = today_entries.iloc[0]["Recipe"]
+                                if current_recipe == recipe_choice:
+                                    st.info(f"ℹ️ **{recipe_choice}** is already selected for today.")
+                                else:
+                                    # 🔄 Replace today’s entry
+                                    hist = hist[hist["Date"] != today].reset_index(drop=True)
+                                    new_row = {"Date": today, "Recipe": recipe_choice, "Item Type": selected_type}
+                                    hist = pd.concat([hist, pd.DataFrame([new_row])], ignore_index=True)
+                                    st.session_state.history_df = try_save_history(hist)
+                                    st.success(f"✅ Replaced today’s pick with **{recipe_choice}**")
+                                    st.cache_data.clear()
+                                    safe_rerun()
                             else:
-                                # Remove today’s old entry (if any)
-                                hist = hist[hist["Date"].dt.date != today].reset_index(drop=True)
-                    
-                                # Add new entry
-                                new_row = {"Date": today.strftime("%Y-%m-%d"),
-                                           "Recipe": recipe_choice,
-                                           "Item Type": selected_type}
+                                # ➕ First save for today
+                                new_row = {"Date": today, "Recipe": recipe_choice, "Item Type": selected_type}
                                 hist = pd.concat([hist, pd.DataFrame([new_row])], ignore_index=True)
-                                hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce")
-                    
-                                # Save
                                 st.session_state.history_df = try_save_history(hist)
                                 st.success(f"✅ Saved **{recipe_choice}** as today’s pick!")
                                 st.cache_data.clear()
                                 safe_rerun()
                         except Exception as e:
                             st.error(f"Failed to save history: {e}")
-
 
     else:
         if recommend:
@@ -291,32 +293,39 @@ if page == "Pick Today’s Recipe":
             if choices:
                 recipe_choice = st.radio("Select recipe to save for today", choices, key="suggest_choice")
                 if st.button("Save Today's Pick (Suggestion)"):
-                    today_entries = history_df[history_df["Date"].dt.date == today]
+                    try:
+                        hist = st.session_state.history_df.copy()
+                        hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce").dt.date
                 
-                    # Case 1: Already same recipe today → skip
-                    if not today_entries.empty and today_entries.iloc[0]["Recipe"] == recipe_choice:
-                        st.info(f"ℹ️ **{recipe_choice}** is already selected for today.")
+                        today_entries = hist[hist["Date"] == today]
                 
-                    else:
-                        # Remove today’s old entry (if any)
-                        new_history = history_df[history_df["Date"].dt.date != today].reset_index(drop=True)
-                
-                        chosen_row = rec_df[rec_df["Recipe"] == recipe_choice].iloc[0].to_dict()
-                        item_type = chosen_row.get("Item Type", "")
-                        new_row = {"Date": today.strftime("%Y-%m-%d"),
-                                   "Recipe": recipe_choice,
-                                   "Item Type": item_type}
-                
-                        # Add new entry
-                        new_history = pd.concat([new_history, pd.DataFrame([new_row])], ignore_index=True)
-                        new_history["Date"] = pd.to_datetime(new_history["Date"], errors="coerce")
-                
-                        # Save
-                        result = try_save_history(new_history)
-                        st.session_state.history_df = result if result is not None else history_df
-                        st.success(f"✅ Saved **{recipe_choice}** as today’s pick!")
-                        st.cache_data.clear()
-                        safe_rerun()
+                        if not today_entries.empty:
+                            current_recipe = today_entries.iloc[0]["Recipe"]
+                            if current_recipe == recipe_choice:
+                                st.info(f"ℹ️ **{recipe_choice}** is already selected for today.")
+                            else:
+                                # 🔄 Replace today’s entry
+                                hist = hist[hist["Date"] != today].reset_index(drop=True)
+                                chosen_row = rec_df[rec_df["Recipe"] == recipe_choice].iloc[0].to_dict()
+                                item_type = chosen_row.get("Item Type", "")
+                                new_row = {"Date": today, "Recipe": recipe_choice, "Item Type": item_type}
+                                hist = pd.concat([hist, pd.DataFrame([new_row])], ignore_index=True)
+                                st.session_state.history_df = try_save_history(hist)
+                                st.success(f"✅ Replaced today’s pick with **{recipe_choice}**")
+                                st.cache_data.clear()
+                                safe_rerun()
+                        else:
+                            # ➕ First save for today
+                            chosen_row = rec_df[rec_df["Recipe"] == recipe_choice].iloc[0].to_dict()
+                            item_type = chosen_row.get("Item Type", "")
+                            new_row = {"Date": today, "Recipe": recipe_choice, "Item Type": item_type}
+                            hist = pd.concat([hist, pd.DataFrame([new_row])], ignore_index=True)
+                            st.session_state.history_df = try_save_history(hist)
+                            st.success(f"✅ Saved **{recipe_choice}** as today’s pick!")
+                            st.cache_data.clear()
+                            safe_rerun()
+                    except Exception as e:
+                        st.error(f"Failed to save history: {e}")
 
                     
 # -----------------------
