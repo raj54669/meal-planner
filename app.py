@@ -209,8 +209,8 @@ if not history_df.empty and "Date" in history_df.columns:
 if page == "Pick Today’s Recipe":
     st.header("Pick Today’s Recipe")
     if today_pick:
-        st.success(f"✅ Today's pick is **{today_pick}** (saved earlier).")
-        st.write("If you want to change it, delete today's entry from the History tab then pick again.")
+        st.success(f"✅ Today's selected pick is **{today_pick}**.")
+        st.write("If you want to update it, save another selection and delete today's entry from the History tab.")
 
     mode = st.radio("Choose option:", ["By Item Type", "Today's Suggestions"], horizontal=True)
 
