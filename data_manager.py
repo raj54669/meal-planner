@@ -59,41 +59,48 @@ def save_today_pick(recipe, item_type="", repo=None, branch="main", filename="hi
     if history.empty:
         history = pd.DataFrame(columns=["Date", "Recipe", "Item Type"])
 
-    # Ensure Date is datetime
+    # Ensure Date column is datetime
     if "Date" in history.columns:
         history["Date"] = pd.to_datetime(history["Date"], errors="coerce")
 
-    # 🔎 Check today's existing entry
+    # Check existing entry for today
     today_rows = history[history["Date"].dt.strftime("%Y-%m-%d") == today]
 
     if not today_rows.empty:
         current_recipe = str(today_rows.iloc[0]["Recipe"]).strip()
         current_type = str(today_rows.iloc[0]["Item Type"]).strip()
 
-        # If the same recipe + type is already saved → do nothing (silent)
-        if current_recipe == recipe.strip() and current_type == str(item_type).strip():
+        # Case 1: Same recipe → do nothing
+        if current_recipe.lower() == recipe.strip().lower():
+            st.info(f"ℹ️ {recipe} is already selected for today.")
             return history
 
-        # Otherwise → drop today's entry before replacing
+        # Case 2: Different recipe → replace today's entry
         history = history[history["Date"].dt.strftime("%Y-%m-%d") != today]
 
-    # Add/replace today's pick
+    # Case 3: No entry yet, or replaced entry
     new_row = pd.DataFrame([{"Date": today, "Recipe": recipe.strip(), "Item Type": str(item_type).strip()}])
     updated = pd.concat([history, new_row], ignore_index=True)
 
-    # Ensure Date column is datetime again
+    # Ensure Date stays datetime
     updated["Date"] = pd.to_datetime(updated["Date"], errors="coerce")
 
-    # Save back
+    # Save (GitHub or local)
     if repo:
-        file = repo.get_contents(filename, ref=branch)
-        repo.update_file(
-            file.path,
-            f"Update history {today}",
-            updated.to_csv(index=False),
-            file.sha,
-            branch=branch
-        )
+        try:
+            file = repo.get_contents(filename, ref=branch)
+            repo.update_file(
+                file.path,
+                f"Update history {today}",
+                updated.to_csv(index=False),
+                file.sha,
+                branch=branch
+            )
+        except Exception:
+            try:
+                repo.create_file(filename, f"Create history {today}", updated.to_csv(index=False), branch=branch)
+            except Exception as e:
+                st.error(f"❌ GitHub save failed: {e}")
     else:
         atomic_save(updated, filename)
 
