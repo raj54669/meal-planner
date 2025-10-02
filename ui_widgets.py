@@ -17,36 +17,24 @@ def apply_global_styles():
         font-size: 2.2rem !important;
         font-weight: 800 !important;
         margin-bottom: 0.5rem !important;
+        color: var(--text-color) !important;   /* Auto adapts */
     }
 
-    /* Light mode title color */
-    [data-theme="light"] h1 {
-        color: #004080 !important;   /* Dark Blue */
-    }
-
-    /* Dark mode title color */
-    [data-theme="dark"] h1 {
-        color: #66b2ff !important;   /* Lighter Blue for contrast */
-    }
-
-    /* ---------------- SUBTITLES (st.header) ---------------- */
+    /* ---------------- SUBTITLES ---------------- */
     h2 {
         font-size: 1.4rem !important;
         font-weight: 700 !important;
         margin-top: 0.8rem !important;
         margin-bottom: 0.4rem !important;
+        color: var(--text-color) !important;   /* Auto adapts */
     }
 
-    /* Light mode subtitle */
-    [data-theme="light"] h2 {
-        color: #222 !important;
+    h3 {
+        font-size: 1.2rem !important;
+        font-weight: 600 !important;
+        color: var(--text-color) !important;   /* Auto adapts */
     }
-
-    /* Dark mode subtitle */
-    [data-theme="dark"] h2 {
-        color: #ddd !important;
-    }
-
+    
     /* ---------------- KEEP YOUR EXISTING DROPDOWN + BUTTON STYLES ---------------- */
     .stSelectbox label {
         font-size: 14px !important;
