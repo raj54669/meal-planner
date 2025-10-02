@@ -6,10 +6,9 @@ import pandas as pd
 def apply_global_styles():
     st.markdown("""
     <style>
-    .block-container {
-        padding-top: 16px !important;
-    }
-
+    .block-container { padding-top: 4px !important;}
+    header {visibility: hidden;}
+    
     /* ---------------- TITLES + HEADERS ---------------- */
     div[data-testid="stMarkdownContainer"] h1,
     div[data-testid="stMarkdownContainer"] h2,
