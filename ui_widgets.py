@@ -7,7 +7,7 @@ def apply_global_styles():
     st.markdown("""
     <style>
     .block-container { padding-top: 4px !important;}
-    #header {visibility: hidden;}
+    header {visibility: hidden;}
     
     /* ---------------- TITLES + HEADERS ---------------- */
     div[data-testid="stMarkdownContainer"] h1,
