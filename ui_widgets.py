@@ -7,44 +7,43 @@ def apply_global_styles():
     st.markdown("""
     <style>
     .block-container {
-        padding-top: 16px !important;
+        padding-top: 4px !important;
     }
 
     /* ----------- TITLES + HEADERS ----------- */
-    /* Light Mode */
-    div[data-testid="stMarkdownContainer"] h1 { 
-        color: #003366 !important;   /* Deep Navy */
-        font-size: 32px !important;
+    div[data-testid="stMarkdownContainer"] h1,
+    div[data-testid="stMarkdownContainer"] h2,
+    div[data-testid="stMarkdownContainer"] h3 {
+        color: black !important;   /* Default for light mode */
+    }
+
+    @media (prefers-color-scheme: dark) {
+        div[data-testid="stMarkdownContainer"] h1,
+        div[data-testid="stMarkdownContainer"] h2,
+        div[data-testid="stMarkdownContainer"] h3 {
+            color: white !important;  /* Auto switch in dark mode */
+        }
+    }
+
+    /* Sizes in px */
+    div[data-testid="stMarkdownContainer"] h1 {
+        font-size: 40px !important;
         font-weight: 800 !important;
         margin-bottom: 8px !important;
     }
-    div[data-testid="stMarkdownContainer"] h2 { 
-        color: #004d99 !important;   /* Strong Blue */
+    div[data-testid="stMarkdownContainer"] h2 {
         font-size: 24px !important;
         font-weight: 700 !important;
         margin-top: 12px !important;
         margin-bottom: 6px !important;
     }
-    div[data-testid="stMarkdownContainer"] h3 { 
-        color: #0066cc !important;   /* Bright Blue */
+    div[data-testid="stMarkdownContainer"] h3 {
         font-size: 18px !important;
         font-weight: 600 !important;
         margin-top: 10px !important;
         margin-bottom: 4px !important;
     }
-
-    /* ----------- Dark Mode (auto-detected) ----------- */
-    @media (prefers-color-scheme: dark) {
-        div[data-testid="stMarkdownContainer"] h1 { 
-            color: #66b2ff !important;   /* Light Blue */
-        }
-        div[data-testid="stMarkdownContainer"] h2 { 
-            color: #80d4ff !important;   /* Brighter Cyan */
-        }
-        div[data-testid="stMarkdownContainer"] h3 { 
-            color: #99e6ff !important;   /* Very Bright Cyan */
-        }
-    }
+    
     /* ---------------- DROPDOWNS ---------------- */
     .stSelectbox label {
         font-size: 14px !important;
