@@ -1,6 +1,6 @@
 # app.py
 import streamlit as st
-from ui_widgets import apply_global_styles, display_table, recipe_card
+from ui_widgets import apply_global_styles, display_table, recipe_card, app_title
 import pandas as pd
 from datetime import date, timedelta
 import os
@@ -181,7 +181,7 @@ if "master_df" not in st.session_state or "history_df" not in st.session_state:
 # -----------------------
 # Title
 # -----------------------
-st.title("🍴 NextBite – Meal Planner App")
+app_title("🍴 NextBite – Meal Planner App", level=1)
 
 # Sidebar nav
 st.sidebar.title("Navigation")
@@ -207,7 +207,7 @@ if not history_df.empty and "Date" in history_df.columns:
 # PICK TODAY
 # -----------------------
 if page == "Pick Today’s Recipe":
-    st.header("Pick Today’s Recipe")
+    app_title("Pick Today’s Recipe", level=2)
     if today_pick:
         st.success(f"✅ Today's selected pick is **{today_pick}**.")
         st.write("If you want to update it, save another selection and delete today's entry from the History tab.")
@@ -300,7 +300,7 @@ if page == "Pick Today’s Recipe":
 # MASTER LIST
 # -----------------------
 elif page == "Master List":
-    st.header("Master List")
+    app_title("Master List", level=2)
     st.write("Add / Edit / Delete recipes. Edit opens inline editor for the selected row.")
 
     if callable(load_master_list) and GITHUB_REPO:
@@ -404,7 +404,7 @@ elif page == "Master List":
 # HISTORY
 # -----------------------
 elif page == "History":
-    st.header("History")
+    app_title("History", level=2)
     st.write("Use the static filter buttons below to view historical picks.")
 
     master_df = st.session_state.master_df
