@@ -7,27 +7,28 @@ def apply_global_styles():
     st.markdown("""
     <style>
     .block-container {
-        padding-top: 4px !important;
+        padding-top: 16px !important;
     }
 
-    /* ----------- TITLES + HEADERS ----------- */
+    /* Default (light mode → black) */
     div[data-testid="stMarkdownContainer"] h1,
     div[data-testid="stMarkdownContainer"] h2,
     div[data-testid="stMarkdownContainer"] h3 {
-        color: black !important;   /* Default for light mode */
+        color: black !important;
     }
 
+    /* Dark mode → white */
     @media (prefers-color-scheme: dark) {
         div[data-testid="stMarkdownContainer"] h1,
         div[data-testid="stMarkdownContainer"] h2,
         div[data-testid="stMarkdownContainer"] h3 {
-            color: white !important;  /* Auto switch in dark mode */
+            color: white !important;
         }
     }
 
     /* Sizes in px */
     div[data-testid="stMarkdownContainer"] h1 {
-        font-size: 40px !important;
+        font-size: 32px !important;
         font-weight: 800 !important;
         margin-bottom: 8px !important;
     }
