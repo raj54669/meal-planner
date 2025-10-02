@@ -6,7 +6,7 @@ import pandas as pd
 def apply_global_styles():
     st.markdown("""
     <style>
-    .block-container { padding-top: 4px !important;}
+    .block-container { padding-top: -4px !important;}
     header {visibility: hidden;}
     
     /* ---------------- TITLES + HEADERS ---------------- */
