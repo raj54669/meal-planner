@@ -241,7 +241,7 @@ if page == "Pick Today’s Recipe":
                 choices = filtered["Recipe"].astype(str).tolist()
                 if choices:
                     recipe_choice = st.radio("Select recipe to save for today", choices, key="bytype_choice")
-                    if st.button("Save Today's Pick (By Type)"):
+                    button_label = "Update Today's Pick (By Type)" if today_pick else "Save Today's Pick (By Type)" if st.button(button_label):
                         try:
                             updated = save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
                             st.session_state.history_df = updated
@@ -272,7 +272,7 @@ if page == "Pick Today’s Recipe":
             choices = rec_df["Recipe"].astype(str).tolist()
             if choices:
                 recipe_choice = st.radio("Select recipe to save for today", choices, key="suggest_choice")
-                if st.button("Save Today's Pick (Suggestion)"):
+                button_label = "Update Today's Pick (Suggestion)" if today_pick else "Save Today's Pick (Suggestion)" if st.button(button_label):
                 
                     chosen_row = rec_df[rec_df["Recipe"] == recipe_choice].iloc[0].to_dict()
                     item_type = chosen_row.get("Item Type", "")
