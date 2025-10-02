@@ -243,7 +243,7 @@ if page == "Pick Today’s Recipe":
                     recipe_choice = st.radio("Select recipe to save for today", choices, key="bytype_choice")
                     button_label = "Update Today's Pick (By Type)" if today_pick else "Save Today's Pick (By Type)" if st.button(button_label):
                         try:
-                            updated = save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+                            updated = dm.save_today_pick(recipe_choice, selected_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH, filename=HISTORY_FILE)
                             st.session_state.history_df = updated
                             st.cache_data.clear()
                             st.success(f"✅ Saved **{recipe_choice}** and updated live!")
@@ -278,7 +278,7 @@ if page == "Pick Today’s Recipe":
                     item_type = chosen_row.get("Item Type", "")
                 
                     try:
-                        updated = save_today_pick(recipe_choice, item_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH)
+                        updated = dm.save_today_pick(recipe_choice, item_type, repo=GITHUB_REPO, branch=GITHUB_BRANCH, filename=HISTORY_FILE)
                         st.session_state.history_df = updated
                         st.cache_data.clear()
                         st.success(f"✅ Saved **{recipe_choice}** and updated live!")
