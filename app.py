@@ -69,10 +69,10 @@ except Exception:
     MASTER_CSV = os.environ.get("MASTER_CSV", MASTER_LIST_FILE)
     HISTORY_CSV = os.environ.get("HISTORY_CSV", HISTORY_FILE)
 
-apply_global_styles()
-
 # Page config
 st.set_page_config(page_title="NextBite – Meal Planner App", page_icon="🍴", layout="centered")
+
+apply_global_styles()
 
 # -----------------------
 # Helpers
