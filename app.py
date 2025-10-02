@@ -183,9 +183,8 @@ if "master_df" not in st.session_state or "history_df" not in st.session_state:
 # -----------------------
 app_title("🍴 NextBite – Meal Planner App", level=1)
 
-# Sidebar nav
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Pick Today’s Recipe", "Master List", "History"])
+# Replace sidebar with tabs
+tab1, tab2, tab3 = st.tabs(["📌 Pick Today’s Recipe", "📋 Master List", "📜 History"])
 
 # Always sync session state copies
 master_df = st.session_state.master_df
@@ -206,7 +205,7 @@ if not history_df.empty and "Date" in history_df.columns:
 # -----------------------
 # PICK TODAY
 # -----------------------
-if page == "Pick Today’s Recipe":
+with tab1
     app_title("Pick Today’s Recipe", level=2)
     if today_pick:
         st.success(f"✅ Today's selected pick is **{today_pick}**.")
@@ -299,7 +298,7 @@ if page == "Pick Today’s Recipe":
 # -----------------------
 # MASTER LIST
 # -----------------------
-elif page == "Master List":
+with tab2:
     app_title("Master List", level=2)
     st.write("Add / Edit / Delete recipes. Edit opens inline editor for the selected row.")
 
@@ -403,7 +402,7 @@ elif page == "Master List":
 # -----------------------
 # HISTORY
 # -----------------------
-elif page == "History":
+with tab3:
     app_title("History", level=2)
     st.write("Use the static filter buttons below to view historical picks.")
 
