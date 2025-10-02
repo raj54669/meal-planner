@@ -4,27 +4,25 @@ import pandas as pd
 
 
 def apply_global_styles():
-    """Inject global CSS for dropdowns, labels, buttons, titles, and other UI elements."""
     st.markdown("""
     <style>
-    /* Remove extra top padding/whitespace */
     .block-container {
         padding-top: 1rem !important;
     }
 
     /* ---------------- TITLES + HEADERS ---------------- */
-    /* Light mode */
-    [data-theme="light"] div[data-testid="stMarkdownContainer"] h1,
-    [data-theme="light"] div[data-testid="stMarkdownContainer"] h2,
-    [data-theme="light"] div[data-testid="stMarkdownContainer"] h3 {
-        color: #004080 !important;  /* Dark Blue */
+    div[data-testid="stMarkdownContainer"] h1,
+    div[data-testid="stMarkdownContainer"] h2,
+    div[data-testid="stMarkdownContainer"] h3 {
+        color: #004080 !important;   /* Force Dark Blue by default */
     }
 
-    /* Dark mode */
-    [data-theme="dark"] div[data-testid="stMarkdownContainer"] h1,
-    [data-theme="dark"] div[data-testid="stMarkdownContainer"] h2,
-    [data-theme="dark"] div[data-testid="stMarkdownContainer"] h3 {
-        color: #66b2ff !important;  /* Light Blue */
+    @media (prefers-color-scheme: dark) {
+        div[data-testid="stMarkdownContainer"] h1,
+        div[data-testid="stMarkdownContainer"] h2,
+        div[data-testid="stMarkdownContainer"] h3 {
+            color: #66b2ff !important;   /* Switch to Light Blue in Dark Mode */
+        }
     }
 
     div[data-testid="stMarkdownContainer"] h1 {
@@ -44,7 +42,6 @@ def apply_global_styles():
         font-size: 1.2rem !important;
         font-weight: 600 !important;
     }
-
 
     /* ---------------- DROPDOWNS ---------------- */
     .stSelectbox label {
