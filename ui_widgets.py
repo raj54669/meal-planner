@@ -18,7 +18,7 @@ def apply_global_styles():
     }
 
     div[data-testid="stMarkdownContainer"] h1 {
-        font-size: 32px !important;
+        font-size: 40px !important;
         font-weight: 800 !important;
         margin-bottom: 8px !important;
     }
