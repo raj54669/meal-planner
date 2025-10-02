@@ -12,36 +12,38 @@ def apply_global_styles():
         padding-top: 1rem !important;
     }
 
-    /* ---------------- PAGE TITLE ---------------- */
-    h1 {
+    /* ---------------- TITLES + HEADERS ---------------- */
+    /* Target actual Streamlit Markdown containers */
+    div[data-testid="stMarkdownContainer"] h1,
+    div[data-testid="stMarkdownContainer"] h2,
+    div[data-testid="stMarkdownContainer"] h3 {
+        color: var(--text-color) !important;   /* Auto adapts to theme */
+    }
+
+    div[data-testid="stMarkdownContainer"] h1 {
         font-size: 2.2rem !important;
         font-weight: 800 !important;
         margin-bottom: 0.5rem !important;
-        color: var(--text-color) !important;   /* Auto adapts */
     }
 
-    /* ---------------- SUBTITLES ---------------- */
-    h2 {
+    div[data-testid="stMarkdownContainer"] h2 {
         font-size: 1.4rem !important;
         font-weight: 700 !important;
         margin-top: 0.8rem !important;
         margin-bottom: 0.4rem !important;
-        color: var(--text-color) !important;   /* Auto adapts */
     }
 
-    h3 {
+    div[data-testid="stMarkdownContainer"] h3 {
         font-size: 1.2rem !important;
         font-weight: 600 !important;
-        color: var(--text-color) !important;   /* Auto adapts */
     }
-    
-    /* ---------------- KEEP YOUR EXISTING DROPDOWN + BUTTON STYLES ---------------- */
+
+    /* ---------------- DROPDOWNS ---------------- */
     .stSelectbox label {
         font-size: 14px !important;
         font-weight: 600 !important;
         margin-bottom: 4px !important;
     }
-
     .stSelectbox div[data-baseweb="select"] > div {
         font-size: 13px !important;
         font-weight: bold !important;
@@ -49,31 +51,27 @@ def apply_global_styles():
         line-height: 1.2 !important;
         min-height: 28px !important;
     }
-
     .stSelectbox {
         margin-bottom: 16px !important;
     }
-
     .stSelectbox div[data-baseweb="select"] {
         align-items: center !important;
         height: auto !important;
     }
-
     .stSelectbox [data-baseweb="option"]:hover {
         background-color: #e0e0e0 !important;
         font-weight: 600 !important;
     }
-
     [data-theme="light"] .stSelectbox div[data-baseweb="select"] > div {
         color: black !important;
         background-color: #f3f4f6 !important;
     }
-
     [data-theme="dark"] .stSelectbox div[data-baseweb="select"] > div {
         color: white !important;
         background-color: #333 !important;
     }
 
+    /* ---------------- BUTTONS ---------------- */
     .stButton > button,
     .stForm button,
     div[data-testid="stButton"] button {
@@ -87,14 +85,12 @@ def apply_global_styles():
         transition: background-color 0.15s ease, transform 0.08s ease, box-shadow 0.12s ease;
         box-shadow: none !important;
     }
-
     .stButton > button:hover,
     .stForm button:hover,
     div[data-testid="stButton"] button:hover {
         background-color: #0059b3 !important;
         transform: translateY(-1px) !important;
     }
-
     .stButton > button:focus,
     .stForm button:focus,
     div[data-testid="stButton"] button:focus {
@@ -103,6 +99,7 @@ def apply_global_styles():
     }
     </style>
     """, unsafe_allow_html=True)
+
 
 
 # -----------------------
