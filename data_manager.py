@@ -51,39 +51,28 @@ def load_history(repo=None, branch="main", filename="history.csv"):
         return pd.DataFrame(columns=["Date", "Recipe", "Item Type"])
 
 # ---------- Save Today’s Pick ----------
-def save_today_pick(recipe, item_type="", repo=None, branch="main", filename="history.csv"):
-    today = datetime.today().strftime("%Y-%m-%d")
+def save_today_pick(recipe, item_type, repo=None, branch="main", history_file="history.csv"):
+    df = load_history(repo, branch=branch)
+    today = date.today().strftime("%Y-%m-%d")
 
-    history = load_history(repo, branch, filename).copy()
-    if history.empty:
-        history = pd.DataFrame(columns=["Date", "Recipe", "Item Type"])
-
-    # Make sure Date is datetime
-    history["Date"] = pd.to_datetime(history["Date"], errors="coerce")
-
-    # Drop any existing entry for today
-    history = history[history["Date"].dt.strftime("%Y-%m-%d") != today]
+    # ✅ Remove any existing entry for today (prevents duplicates)
+    df = df[df["Date"].astype(str) != today]
 
     # Add the new entry
-    new_row = pd.DataFrame(
-        [{"Date": today, "Recipe": recipe.strip(), "Item Type": str(item_type).strip()}]
+    new_row = {"Date": today, "Recipe": recipe, "Item Type": item_type}
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+    # Save back to GitHub
+    file = repo.get_contents(history_file, ref=branch)
+    repo.update_file(
+        file.path,
+        f"Update today's pick: {recipe}",
+        df.to_csv(index=False),
+        file.sha,
+        branch=branch
     )
-    updated = pd.concat([history, new_row], ignore_index=True)
 
-    # Save back
-    if repo:
-        file = repo.get_contents(filename, ref=branch)
-        repo.update_file(
-            file.path,
-            f"Update history {today}",
-            updated.to_csv(index=False),
-            file.sha,
-            branch=branch,
-        )
-    else:
-        atomic_save(updated, filename)
-
-    return updated
+    return df
 
 
 # ---------- Delete Today ----------
