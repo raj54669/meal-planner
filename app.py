@@ -205,7 +205,7 @@ if not history_df.empty and "Date" in history_df.columns:
 # -----------------------
 # PICK TODAY
 # -----------------------
-with tab1
+with tab1:
     app_title("Pick Today’s Recipe", level=2)
     if today_pick:
         st.success(f"✅ Today's selected pick is **{today_pick}**.")
