@@ -1,10 +1,10 @@
 # app.py
 import streamlit as st
+from ui_widgets import apply_global_styles, display_table, recipe_card
 import pandas as pd
 from datetime import date, timedelta
 import os
 from github import Github
-from ui_widgets import display_table, recipe_card, apply_global_styles
 import data_manager as dm
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
