@@ -189,3 +189,15 @@ def recipe_card(i, row):
             st.session_state["edit_row"] = i
         if col2.button("🗑️ Delete", key=f"delete_{i}"):
             st.session_state["delete_row"] = i
+
+# -----------------------
+# Custom Title / Header Components
+# -----------------------
+def app_title(text: str, level: int = 1):
+    """
+    Render a styled title/header that respects global CSS.
+    level = 1 -> h1 (big title)
+    level = 2 -> h2 (section header)
+    level = 3 -> h3 (subsection header)
+    """
+    st.markdown(f"<h{level}>{text}</h{level}>", unsafe_allow_html=True)
