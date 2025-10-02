@@ -4,61 +4,87 @@ import pandas as pd
 
 
 def apply_global_styles():
-    """Inject global CSS for dropdowns, labels, buttons, and other UI elements."""
+    """Inject global CSS for dropdowns, labels, buttons, titles, headers and other UI elements."""
     st.markdown("""
     <style>
-    /* Label styling */
+    /* ===== Remove top white space ===== */
+    .block-container {
+        padding-top: 1rem !important;
+    }
+
+    /* ===== Main Page Title (st.title) ===== */
+    h1 {
+        text-align: center;
+        font-family: 'Trebuchet MS', sans-serif;
+        font-size: 2.6rem !important;
+        font-weight: 800 !important;
+        margin-bottom: 1rem;
+    }
+
+    /* ===== Section Headers (st.header) ===== */
+    h2 {
+        text-align: left;
+        font-family: 'Trebuchet MS', sans-serif;
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    /* ===== Light Mode Colors ===== */
+    body[data-theme="light"] h1 {
+        color: #2E86C1;   /* Deep blue */
+    }
+    body[data-theme="light"] h2 {
+        color: #117A65;   /* Dark teal */
+    }
+
+    /* ===== Dark Mode Colors ===== */
+    body[data-theme="dark"] h1 {
+        color: #5DADE2;   /* Lighter blue */
+    }
+    body[data-theme="dark"] h2 {
+        color: #48C9B0;   /* Bright teal */
+    }
+
+    /* ===== Your existing dropdown & button styles (kept as is) ===== */
     .stSelectbox label {
         font-size: 14px !important;
         font-weight: 600 !important;
         margin-bottom: 4px !important;
     }
-
-    /* Dropdown box styling */
     .stSelectbox div[data-baseweb="select"] > div {
-        font-size: 13px !important;       /* match font size */
+        font-size: 13px !important;
         font-weight: bold !important;
-        padding: 2px 8px !important;      /* tighter padding */
+        padding: 2px 8px !important;
         line-height: 1.2 !important;
-        min-height: 28px !important;      /* smaller height */
+        min-height: 28px !important;
     }
-
-    /* Dropdown container (extra space below) */
     .stSelectbox {
-        margin-bottom: 16px !important;   /* space below dropdown */
+        margin-bottom: 16px !important;
     }
-
-    /* Align items properly */
     .stSelectbox div[data-baseweb="select"] {
         align-items: center !important;
         height: auto !important;
     }
-
-    /* Hover option styling */
     .stSelectbox [data-baseweb="option"]:hover {
         background-color: #e0e0e0 !important;
         font-weight: 600 !important;
     }
-
-    /* Light mode dropdown */
     [data-theme="light"] .stSelectbox div[data-baseweb="select"] > div {
         color: black !important;
         background-color: #f3f4f6 !important;
     }
-
-    /* Dark mode dropdown */
     [data-theme="dark"] .stSelectbox div[data-baseweb="select"] > div {
         color: white !important;
         background-color: #333 !important;
-    }   /* ← this closing brace was missing */
+    }
 
-    /* -------- Simple, single blue style for ALL buttons (including form buttons) -------- */
-    /* This ensures uniform blue buttons: Add, Edit, Delete, Save, Cancel, etc. */
     .stButton > button,
     .stForm button,
     div[data-testid="stButton"] button {
         font-weight: 700 !important;
-        background-color: #004080 !important;   /* base blue */
+        background-color: #004080 !important;
         color: #ffffff !important;
         border-radius: 6px !important;
         border: 1px solid #003060 !important;
@@ -67,12 +93,10 @@ def apply_global_styles():
         transition: background-color 0.15s ease, transform 0.08s ease, box-shadow 0.12s ease;
         box-shadow: none !important;
     }
-
-    /* hover / focus */
     .stButton > button:hover,
     .stForm button:hover,
     div[data-testid="stButton"] button:hover {
-        background-color: #0059b3 !important;   /* hover blue */
+        background-color: #0059b3 !important;
         transform: translateY(-1px) !important;
     }
     .stButton > button:focus,
@@ -80,9 +104,10 @@ def apply_global_styles():
     div[data-testid="stButton"] button:focus {
         outline: none !important;
         box-shadow: 0 0 0 4px rgba(0,80,128,0.12) !important;
-    }    
+    }
     </style>
     """, unsafe_allow_html=True)
+
 
 # -----------------------
 # Original table functions (fixed to always render HTML)
