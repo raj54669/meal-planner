@@ -4,55 +4,56 @@ import pandas as pd
 
 
 def apply_global_styles():
-    """Inject global CSS for dropdowns, labels, buttons, titles, headers and other UI elements."""
+    """Inject global CSS for dropdowns, labels, buttons, titles, and other UI elements."""
     st.markdown("""
     <style>
-    /* ===== Remove top white space ===== */
+    /* Remove extra top padding/whitespace */
     .block-container {
         padding-top: 1rem !important;
     }
 
-    /* ===== Main Page Title (st.title) ===== */
+    /* ---------------- PAGE TITLE ---------------- */
     h1 {
-        text-align: center;
-        font-family: 'Trebuchet MS', sans-serif;
-        font-size: 2.6rem !important;
+        font-size: 2.2rem !important;
         font-weight: 800 !important;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem !important;
     }
 
-    /* ===== Section Headers (st.header) ===== */
+    /* Light mode title color */
+    [data-theme="light"] h1 {
+        color: #004080 !important;   /* Dark Blue */
+    }
+
+    /* Dark mode title color */
+    [data-theme="dark"] h1 {
+        color: #66b2ff !important;   /* Lighter Blue for contrast */
+    }
+
+    /* ---------------- SUBTITLES (st.header) ---------------- */
     h2 {
-        text-align: left;
-        font-family: 'Trebuchet MS', sans-serif;
-        font-size: 1.8rem !important;
+        font-size: 1.4rem !important;
         font-weight: 700 !important;
-        margin-top: 1.5rem;
-        margin-bottom: 0.75rem;
+        margin-top: 0.8rem !important;
+        margin-bottom: 0.4rem !important;
     }
 
-    /* ===== Light Mode Colors ===== */
-    body[data-theme="light"] h1 {
-        color: #2E86C1;   /* Deep blue */
-    }
-    body[data-theme="light"] h2 {
-        color: #117A65;   /* Dark teal */
+    /* Light mode subtitle */
+    [data-theme="light"] h2 {
+        color: #222 !important;
     }
 
-    /* ===== Dark Mode Colors ===== */
-    body[data-theme="dark"] h1 {
-        color: #5DADE2;   /* Lighter blue */
-    }
-    body[data-theme="dark"] h2 {
-        color: #48C9B0;   /* Bright teal */
+    /* Dark mode subtitle */
+    [data-theme="dark"] h2 {
+        color: #ddd !important;
     }
 
-    /* ===== Your existing dropdown & button styles (kept as is) ===== */
+    /* ---------------- KEEP YOUR EXISTING DROPDOWN + BUTTON STYLES ---------------- */
     .stSelectbox label {
         font-size: 14px !important;
         font-weight: 600 !important;
         margin-bottom: 4px !important;
     }
+
     .stSelectbox div[data-baseweb="select"] > div {
         font-size: 13px !important;
         font-weight: bold !important;
@@ -60,21 +61,26 @@ def apply_global_styles():
         line-height: 1.2 !important;
         min-height: 28px !important;
     }
+
     .stSelectbox {
         margin-bottom: 16px !important;
     }
+
     .stSelectbox div[data-baseweb="select"] {
         align-items: center !important;
         height: auto !important;
     }
+
     .stSelectbox [data-baseweb="option"]:hover {
         background-color: #e0e0e0 !important;
         font-weight: 600 !important;
     }
+
     [data-theme="light"] .stSelectbox div[data-baseweb="select"] > div {
         color: black !important;
         background-color: #f3f4f6 !important;
     }
+
     [data-theme="dark"] .stSelectbox div[data-baseweb="select"] > div {
         color: white !important;
         background-color: #333 !important;
@@ -93,12 +99,14 @@ def apply_global_styles():
         transition: background-color 0.15s ease, transform 0.08s ease, box-shadow 0.12s ease;
         box-shadow: none !important;
     }
+
     .stButton > button:hover,
     .stForm button:hover,
     div[data-testid="stButton"] button:hover {
         background-color: #0059b3 !important;
         transform: translateY(-1px) !important;
     }
+
     .stButton > button:focus,
     .stForm button:focus,
     div[data-testid="stButton"] button:focus {
