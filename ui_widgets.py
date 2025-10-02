@@ -10,25 +10,32 @@ def apply_global_styles():
         padding-top: 16px !important;
     }
 
-    /* Default (light mode → black) */
+    /* Force headers to adapt automatically */
     div[data-testid="stMarkdownContainer"] h1,
     div[data-testid="stMarkdownContainer"] h2,
     div[data-testid="stMarkdownContainer"] h3 {
-        color: black !important;
+        color: inherit !important;   /* Take from system (light=black, dark=white) */
     }
 
-    /* Dark mode → white */
+    /* If still overridden, enforce explicitly */
+    @media (prefers-color-scheme: light) {
+        div[data-testid="stMarkdownContainer"] h1,
+        div[data-testid="stMarkdownContainer"] h2,
+        div[data-testid="stMarkdownContainer"] h3 {
+            color: #000000 !important;
+        }
+    }
     @media (prefers-color-scheme: dark) {
         div[data-testid="stMarkdownContainer"] h1,
         div[data-testid="stMarkdownContainer"] h2,
         div[data-testid="stMarkdownContainer"] h3 {
-            color: white !important;
+            color: #ffffff !important;
         }
     }
 
-    /* Sizes in px */
+    /* Font sizes in px */
     div[data-testid="stMarkdownContainer"] h1 {
-        font-size: 32px !important;
+        font-size: 40px !important;
         font-weight: 800 !important;
         margin-bottom: 8px !important;
     }
