@@ -13,11 +13,18 @@ def apply_global_styles():
     }
 
     /* ---------------- TITLES + HEADERS ---------------- */
-    /* Target actual Streamlit Markdown containers */
-    div[data-testid="stMarkdownContainer"] h1,
-    div[data-testid="stMarkdownContainer"] h2,
-    div[data-testid="stMarkdownContainer"] h3 {
-        color: var(--text-color) !important;   /* Auto adapts to theme */
+    /* Light mode */
+    [data-theme="light"] div[data-testid="stMarkdownContainer"] h1,
+    [data-theme="light"] div[data-testid="stMarkdownContainer"] h2,
+    [data-theme="light"] div[data-testid="stMarkdownContainer"] h3 {
+        color: #004080 !important;  /* Dark Blue */
+    }
+
+    /* Dark mode */
+    [data-theme="dark"] div[data-testid="stMarkdownContainer"] h1,
+    [data-theme="dark"] div[data-testid="stMarkdownContainer"] h2,
+    [data-theme="dark"] div[data-testid="stMarkdownContainer"] h3 {
+        color: #66b2ff !important;  /* Light Blue */
     }
 
     div[data-testid="stMarkdownContainer"] h1 {
@@ -37,6 +44,7 @@ def apply_global_styles():
         font-size: 1.2rem !important;
         font-weight: 600 !important;
     }
+
 
     /* ---------------- DROPDOWNS ---------------- */
     .stSelectbox label {
