@@ -93,6 +93,50 @@ def apply_global_styles():
         outline: none !important;
         box-shadow: 0 0 0 4px rgba(0,80,128,0.12) !important;
     }
+
+        /* ---------- MOBILE-FRIENDLY TWEAKS ---------- */
+        @media (max-width: 600px) {
+
+      /* Make buttons easier to tap */
+      .stButton > button,
+      .stForm button,
+      div[data-testid="stButton"] button {
+          width: 100% !important;        /* full width on small screens */
+          margin-bottom: 8px !important; /* add space between stacked buttons */
+          font-size: 15px !important;    /* slightly bigger text */
+          padding: 10px 16px !important; /* bigger tap area */
+      }
+
+      /* Adjust table font sizes & allow wrapping */
+      .nb-table th, .nb-table td {
+          font-size: 11px !important;
+          padding: 4px 6px !important;
+          white-space: normal !important;
+          word-break: break-word !important;
+      }
+
+      /* Make the table container scrollable if still too wide */
+      .nb-table-wrap {
+          overflow-x: auto !important;
+      }
+
+      /* Stack columns vertically inside expanders (edit/delete buttons) */
+      [data-testid="stHorizontalBlock"] > div {
+          flex: 1 1 100% !important;
+      }
+
+      /* Reduce margins for titles/headers */
+      div[data-testid="stMarkdownContainer"] h1 {
+          font-size: 28px !important;
+      }
+      div[data-testid="stMarkdownContainer"] h2 {
+          font-size: 20px !important;
+      }
+      div[data-testid="stMarkdownContainer"] h3 {
+          font-size: 16px !important;
+      }
+    }
+
     </style>
     """, unsafe_allow_html=True)
 
