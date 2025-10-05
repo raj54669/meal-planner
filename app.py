@@ -388,15 +388,22 @@ with tab2:
                 # Confirm delete mode
                 if st.session_state.get("delete_row") == i:
                     st.warning(f"Confirm delete '{row['Recipe']}'?")
-                    if st.button("🗑️ Confirm Delete", key=f"confirm_del_{i}"):
-                        new_master = master_df.drop(i).reset_index(drop=True)
-                        st.session_state.master_df = try_save_master_list(new_master) or master_df
-                        st.success("🗑️ Recipe deleted live!")
-                        st.session_state["delete_row"] = None
-                        safe_rerun()
-                    if st.button("❌ Cancel Delete", key=f"cancel_del_{i}"):
-                        st.session_state["delete_row"] = None
-                        safe_rerun()
+                
+                    # Side-by-side confirm/cancel buttons
+                    col1, col2 = st.columns(2, gap="small")
+                    with col1:
+                        if st.button("🗑️ Confirm Delete", key=f"confirm_del_{i}"):
+                            new_master = master_df.drop(i).reset_index(drop=True)
+                            st.session_state.master_df = try_save_master_list(new_master) or master_df
+                            st.success("🗑️ Recipe deleted live!")
+                            st.session_state["delete_row"] = None
+                            safe_rerun()
+                
+                    with col2:
+                        if st.button("❌ Cancel Delete", key=f"cancel_del_{i}"):
+                            st.session_state["delete_row"] = None
+                            safe_rerun()
+                
 
 
 # -----------------------
