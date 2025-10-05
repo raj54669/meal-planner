@@ -94,13 +94,17 @@ def apply_global_styles():
         box-shadow: 0 0 0 4px rgba(0,80,128,0.12) !important;
     }
 
-    /* force horizontal button layout even on small screens */
-    div[data-testid="stHorizontalBlock"] {
+    /* apply to all column containers, including those inside expanders and tabs */
+    div[data-testid="stHorizontalBlock"], 
+    div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"] {
         flex-wrap: nowrap !important;
     }
+    
+    /* make every column shrink nicely so they fit in one row */
     div[data-testid="column"] {
-        min-width: auto !important;
         flex: 1 1 auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
     }
     </style>
     """, unsafe_allow_html=True)
