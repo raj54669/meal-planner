@@ -94,28 +94,6 @@ def apply_global_styles():
         box-shadow: 0 0 0 4px rgba(0,80,128,0.12) !important;
     }
 
-    /* Default: buttons in one row */
-    div[data-testid="stHorizontalBlock"],
-    div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"] {
-      flex-wrap: nowrap !important;
-    }
-    
-    div[data-testid="column"] {
-      flex: 1 1 auto !important;
-      min-width: 0 !important;
-      max-width: none !important;
-    }
-    
-    /* On very narrow screens (like iPhones) allow wrapping so they don't overflow */
-    @media screen and (max-width: 500px) {
-      div[data-testid="stHorizontalBlock"],
-      div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"] {
-        flex-wrap: wrap !important;
-      }
-      div[data-testid="column"] {
-        flex: 1 1 100% !important;
-      }
-    }
     </style>
     """, unsafe_allow_html=True)
 
