@@ -63,23 +63,46 @@ def recommend(master_df: pd.DataFrame, history_df: pd.DataFrame, min_count: int 
     # sort by score desc
     candidates = candidates.sort_values("score", ascending=False).reset_index(drop=True)
 
-    # try to pick a set that respects the no same-item-type-consecutive rule
+    # --- Probabilistic item-type skipping logic ---
+    skip_same_type_prob = 0.7  # 70% chance to skip same type as last day
+
     picks = []
+    picked_recipes = set()
     picked_types = []
+
     for _, row in candidates.iterrows():
         if len(picks) >= max_count:
             break
+        recipe_name = row.get("Recipe")
         itype = row.get("Item Type")
-        # if first pick, avoid last_item_type if possible
+
+        # For the very first pick, try (probabilistically) to avoid yesterday’s item type
         if last_item_type and len(picks) == 0 and itype == last_item_type:
-            others = candidates[candidates["Item Type"] != last_item_type]
-            if not others.empty:
+            if random.random() < skip_same_type_prob:
                 continue
-        # avoid consecutive within picks
-        if picked_types and itype == picked_types[-1]:
+
+        # Within the same recommendation batch, try to avoid consecutive same types
+        if picked_types and itype == picked_types[-1] and random.random() < 0.5:
             continue
+
+        if recipe_name in picked_recipes:
+            continue
+
         picks.append(row)
+        picked_recipes.add(recipe_name)
         picked_types.append(itype)
+
+    # Fill up to min_count if needed (ignoring item-type constraints)
+    if len(picks) < min_count:
+        for _, row in candidates.iterrows():
+            if len(picks) >= min_count:
+                break
+            recipe_name = row.get("Recipe")
+            if recipe_name in picked_recipes:
+                continue
+            picks.append(row)
+            picked_recipes.add(recipe_name)
+            picked_types.append(row.get("Item Type"))
 
     # if fewer than min_count, fill with top candidates ignoring item-type constraints
     if len(picks) < min_count:
